@@ -1,0 +1,6 @@
+mkdir-p
+h5py
+bistiming
+
+pylint
+tox
