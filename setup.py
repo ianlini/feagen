@@ -15,14 +15,12 @@ else:
         'coverage',
     ]
     install_requires = [
-        'six',
+        'mkdir-p',
+        'h5py',
         'bistiming',
         'numpy',
     ]
-    tests_require = [
-        'scikit-learn',
-        'scipy',
-    ]
+    tests_require = []
 
 description = ("A fast and memory-efficient Python feature generating "
                "framework for machine learning.")

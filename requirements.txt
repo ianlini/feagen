@@ -1,6 +1,7 @@
 mkdir-p
 h5py
 bistiming
+numpy
 
 pylint
 tox
