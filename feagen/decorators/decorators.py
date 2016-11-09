@@ -25,16 +25,9 @@ def can_skip(set_name, new_data_name, interm_data, global_feature_h5f,
     return False
 
 
-def data_type(set_name, func_dict, skip_if_exist=True, show_skip=True):
-    def intermediate_data_decorator(args):
-        func, will_generate_keys = args
-        if func.__name__ in func_dict.values():
-            raise ValueError("duplicated function name " + func.__name__)
-        for key in will_generate_keys:
-            if key in func_dict:
-                raise ValueError("duplicated {} {} in {} and {}".format(
-                    set_name, key, func_dict[key], func.__name__))
-            func_dict[key] = func.__name__
+def data_type(set_name, skip_if_exist=True, show_skip=True):
+    def data_type_decorator(func):
+        func._feagen_data_type = set_name  # pylint: disable=protected-access
 
         @wraps(func)
         def func_wrapper(self, new_data_name):
@@ -45,22 +38,20 @@ def data_type(set_name, func_dict, skip_if_exist=True, show_skip=True):
             func(self, set_name, new_data_name)
             gc.collect()
         return func_wrapper
-    return intermediate_data_decorator
+    return data_type_decorator
 
 
-def require_intermediate_data(data_names, interm_data_func_dict):
+def require_intermediate_data(data_names):
     if isinstance(data_names, str):
         data_names = (data_names,)
 
-    def require_intermediate_data_decorator(args):
-        func, will_generate_keys = args
-
+    def require_intermediate_data_decorator(func):
         @wraps(func)
         def func_wrapper(self, set_name, new_data_name):
-            self.require(data_names, interm_data_func_dict)
+            self.require(data_names, self._intermediate_data_func_dict)  # pylint: disable=protected-access
             data = {key: self.intermediate_data[key] for key in data_names}
             func(self, set_name, new_data_name, data=data)
-        return func_wrapper, will_generate_keys
+        return func_wrapper
     return require_intermediate_data_decorator
 
 
@@ -70,6 +61,8 @@ def will_generate(will_generate_keys, manually_create_dataset=False):
     will_generate_key_set = set(will_generate_keys)
 
     def will_generate_decorator(func):
+        func._feagen_will_generate_keys = will_generate_keys  # pylint: disable=protected-access
+
         @wraps(func)
         def func_wrapper(self, set_name, new_data_name, **kwargs):
             if manually_create_dataset:
@@ -124,7 +117,7 @@ def will_generate(will_generate_keys, manually_create_dataset=False):
                                 key, data=result_dict[key])
             else:
                 raise NotImplementedError()
-        return func_wrapper, will_generate_keys
+        return func_wrapper
     return will_generate_decorator
 
 

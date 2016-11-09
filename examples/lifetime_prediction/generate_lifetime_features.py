@@ -1,20 +1,17 @@
 import pandas as pd
 import feagen as fg
-from feagen.decorators import will_generate
-
-from registered_decorators import (
+from feagen.decorators import (
+    will_generate,
     require_intermediate_data,
     features,
     intermediate_data,
-    FEATURE_FUNC_DICT,
 )
 
 
 class LifetimeFeatureGenerator(fg.FeatureGenerator):
 
     def __init__(self, global_feature_hdf_path, data_csv_path):
-        super(LifetimeFeatureGenerator, self).__init__(global_feature_hdf_path,
-                                                       FEATURE_FUNC_DICT)
+        super(LifetimeFeatureGenerator, self).__init__(global_feature_hdf_path)
         self.data_csv_path = data_csv_path
 
     @intermediate_data(skip_if_exist=True, show_skip=False)
@@ -41,7 +38,7 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
     @will_generate('BMI')
     def gen_bmi(self, data):
         data_df = data['data_df']
-        bmi = data_df['weight'] / ((data_df['height']/100) ** 2)
+        bmi = data_df['weight'] / ((data_df['height'] / 100) ** 2)
         return {'BMI': bmi}
 
 
