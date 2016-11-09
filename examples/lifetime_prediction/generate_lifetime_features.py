@@ -25,10 +25,13 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
     @features(skip_if_exist=True)
     @will_generate(['weight', 'height'])
     def gen_raw_data_features(self):
-        return {
-            'weight': self.data_df['weight'],
-            'height': self.data_df['height'],
-        }
+        return self.data_df[['weight', 'height']]
+
+    @features(skip_if_exist=True)
+    @will_generate('BMI')
+    def gen_bmi(self):
+        bmi = self.data_df['weight'] / ((self.data_df['height']/100) ** 2)
+        return {'BMI': bmi}
 
 
 class FeatureConfig(object):
@@ -50,7 +53,7 @@ def main():
 
     feature_config = FeatureConfig(
         label_list=['label'],
-        feature_list=['weight', 'height'],
+        feature_list=['weight', 'height', 'BMI'],
         extra_data_list=[],
         concat_feature_hdf_path="concat_feature.h5")
 
