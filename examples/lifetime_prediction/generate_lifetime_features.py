@@ -12,25 +12,36 @@ from registered_decorators import (
 
 class LifetimeFeatureGenerator(fg.FeatureGenerator):
 
-    def __init__(self, global_feature_hdf_path, data_df):
+    def __init__(self, global_feature_hdf_path, data_csv_path):
         super(LifetimeFeatureGenerator, self).__init__(global_feature_hdf_path,
                                                        FEATURE_FUNC_DICT)
-        self.data_df = data_df
+        self.data_csv_path = data_csv_path
+
+    @intermediate_data(skip_if_exist=True, show_skip=False)
+    @will_generate('data_df')
+    def gen_data_df(self):
+        return {'data_df': pd.read_csv(self.data_csv_path, index_col='id')}
 
     @features(skip_if_exist=True)
+    @require_intermediate_data('data_df')
     @will_generate('label')
-    def gen_label(self):
-        return {'label': self.data_df['lifetime']}
+    def gen_label(self, data):
+        data_df = data['data_df']
+        return {'label': data_df['lifetime']}
 
     @features(skip_if_exist=True)
+    @require_intermediate_data('data_df')
     @will_generate(['weight', 'height'])
-    def gen_raw_data_features(self):
-        return self.data_df[['weight', 'height']]
+    def gen_raw_data_features(self, data):
+        data_df = data['data_df']
+        return data_df[['weight', 'height']]
 
     @features(skip_if_exist=True)
+    @require_intermediate_data('data_df')
     @will_generate('BMI')
-    def gen_bmi(self):
-        bmi = self.data_df['weight'] / ((self.data_df['height']/100) ** 2)
+    def gen_bmi(self, data):
+        data_df = data['data_df']
+        bmi = data_df['weight'] / ((data_df['height']/100) ** 2)
         return {'BMI': bmi}
 
 
@@ -45,11 +56,9 @@ class FeatureConfig(object):
 
 
 def main():
-    data_df = pd.read_csv('lifetime.csv', index_col='id')
-
     feature_generator = LifetimeFeatureGenerator(
         global_feature_hdf_path="global_feature.h5",
-        data_df=data_df)
+        data_csv_path='lifetime.csv')
 
     feature_config = FeatureConfig(
         label_list=['label'],
