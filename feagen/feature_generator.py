@@ -7,13 +7,15 @@ import six
 
 class FeatureGeneratorType(type):
 
-    def __new__(cls, clsname, bases, dct):
+    def __new__(mcs, clsname, bases, dct):
         # pylint: disable=protected-access
 
         func_set_dict = {
             'features': {},
             'intermediate_data': {},
         }
+
+        # register the data name
         for attr_key, val in six.viewitems(dct):
             if not hasattr(val, '_feagen_data_type'):
                 continue
@@ -25,8 +27,11 @@ class FeatureGeneratorType(type):
                         set_name, key, func_dict[key], attr_key))
                 func_dict[key] = attr_key
 
-        return super(FeatureGeneratorType, cls).__new__(
-            cls, clsname, bases, dct)
+        dct['_feature_func_dict'] = func_set_dict['features']
+        dct['_intermediate_data_func_dict'] = func_set_dict['intermediate_data']
+
+        return super(FeatureGeneratorType, mcs).__new__(
+            mcs, clsname, bases, dct)
 
 
 class FeatureGenerator(six.with_metaclass(FeatureGeneratorType, object)):
