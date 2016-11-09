@@ -8,7 +8,9 @@ class FeatureGenerator(object):
 
     def __init__(self, global_feature_hdf_path, feature_func_dict):
         self.intermediate_data = {}
-        mkdir_p(os.path.dirname(global_feature_hdf_path))
+        global_feature_hdf_dir = os.path.dirname(global_feature_hdf_path)
+        if global_feature_hdf_dir != '':
+            mkdir_p(global_feature_hdf_dir)
         self.global_feature_h5f = h5py.File(global_feature_hdf_path, 'a')
         self.feature_func_dict = feature_func_dict
 
