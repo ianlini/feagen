@@ -2,9 +2,25 @@ import os.path
 
 import h5py
 from mkdir_p import mkdir_p
+import six
 
 
-class FeatureGenerator(object):
+class FeatureGeneratorType(type):
+
+    def __new__(cls, clsname, bases, dct):
+        import ipdb; ipdb.set_trace()
+        # if func.__name__ in func_dict.values():
+        #     raise ValueError("duplicated function name " + func.__name__)
+        # for key in will_generate_keys:
+        #     if key in func_dict:
+        #         raise ValueError("duplicated {} {} in {} and {}".format(
+        #             set_name, key, func_dict[key], func.__name__))
+        #     func_dict[key] = func.__name__
+        return super(FeatureGeneratorType, cls).__new__(
+            cls, clsname, bases, dct)
+
+
+class FeatureGenerator(six.with_metaclass(FeatureGeneratorType, object)):
 
     def __init__(self, global_feature_hdf_path, feature_func_dict):
         self.intermediate_data = {}
