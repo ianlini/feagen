@@ -27,7 +27,7 @@ def can_skip(set_name, new_data_name, interm_data, global_feature_h5f,
 
 def data_type(set_name, func_dict, skip_if_exist=True, show_skip=True):
     def data_type_decorator(func):
-        func.__feagen_data_type = set_name  # pylint: disable=W0212
+        func._feagen_data_type = set_name  # pylint: disable=protected-access
 
         @wraps(func)
         def func_wrapper(self, new_data_name):
@@ -61,7 +61,7 @@ def will_generate(will_generate_keys, manually_create_dataset=False):
     will_generate_key_set = set(will_generate_keys)
 
     def will_generate_decorator(func):
-        func.__feagen_will_generate_keys = will_generate_keys  # pylint: disable=W0212
+        func._feagen_will_generate_keys = will_generate_keys  # pylint: disable=protected-access
 
         @wraps(func)
         def func_wrapper(self, set_name, new_data_name, **kwargs):

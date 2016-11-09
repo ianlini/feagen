@@ -8,14 +8,23 @@ import six
 class FeatureGeneratorType(type):
 
     def __new__(cls, clsname, bases, dct):
-        import ipdb; ipdb.set_trace()
-        # if func.__name__ in func_dict.values():
-        #     raise ValueError("duplicated function name " + func.__name__)
-        # for key in will_generate_keys:
-        #     if key in func_dict:
-        #         raise ValueError("duplicated {} {} in {} and {}".format(
-        #             set_name, key, func_dict[key], func.__name__))
-        #     func_dict[key] = func.__name__
+        # pylint: disable=protected-access
+
+        func_set_dict = {
+            'features': {},
+            'intermediate_data': {},
+        }
+        for attr_key, val in six.viewitems(dct):
+            if not hasattr(val, '_feagen_data_type'):
+                continue
+            set_name = val._feagen_data_type
+            func_dict = func_set_dict[set_name]
+            for key in val._feagen_will_generate_keys:
+                if key in func_dict:
+                    raise ValueError("duplicated {} {} in {} and {}".format(
+                        set_name, key, func_dict[key], attr_key))
+                func_dict[key] = attr_key
+
         return super(FeatureGeneratorType, cls).__new__(
             cls, clsname, bases, dct)
 
