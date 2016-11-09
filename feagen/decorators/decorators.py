@@ -25,7 +25,7 @@ def can_skip(set_name, new_data_name, interm_data, global_feature_h5f,
     return False
 
 
-def data_type(set_name, func_dict, skip_if_exist=True, show_skip=True):
+def data_type(set_name, skip_if_exist=True, show_skip=True):
     def data_type_decorator(func):
         func._feagen_data_type = set_name  # pylint: disable=protected-access
 
@@ -41,14 +41,14 @@ def data_type(set_name, func_dict, skip_if_exist=True, show_skip=True):
     return data_type_decorator
 
 
-def require_intermediate_data(data_names, interm_data_func_dict):
+def require_intermediate_data(data_names):
     if isinstance(data_names, str):
         data_names = (data_names,)
 
     def require_intermediate_data_decorator(func):
         @wraps(func)
         def func_wrapper(self, set_name, new_data_name):
-            self.require(data_names, interm_data_func_dict)
+            self.require(data_names, self._intermediate_data_func_dict)  # pylint: disable=protected-access
             data = {key: self.intermediate_data[key] for key in data_names}
             func(self, set_name, new_data_name, data=data)
         return func_wrapper

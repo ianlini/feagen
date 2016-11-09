@@ -36,18 +36,17 @@ class FeatureGeneratorType(type):
 
 class FeatureGenerator(six.with_metaclass(FeatureGeneratorType, object)):
 
-    def __init__(self, global_feature_hdf_path, feature_func_dict):
+    def __init__(self, global_feature_hdf_path):
         self.intermediate_data = {}
         global_feature_hdf_dir = os.path.dirname(global_feature_hdf_path)
         if global_feature_hdf_dir != '':
             mkdir_p(global_feature_hdf_dir)
         self.global_feature_h5f = h5py.File(global_feature_hdf_path, 'a')
-        self.feature_func_dict = feature_func_dict
 
     def generate(self, feature_names):
         if isinstance(feature_names, str):
             feature_names = [feature_names]
-        self.require(feature_names, self.feature_func_dict)
+        self.require(feature_names, self._feature_func_dict)
 
     def require(self, keys, func_dict):
         for key in keys:
