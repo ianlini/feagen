@@ -38,7 +38,7 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
     @will_generate('BMI')
     def gen_bmi(self, data):
         data_df = data['data_df']
-        bmi = data_df['weight'] / ((data_df['height']/100) ** 2)
+        bmi = data_df['weight'] / ((data_df['height'] / 100) ** 2)
         return {'BMI': bmi}
 
 
