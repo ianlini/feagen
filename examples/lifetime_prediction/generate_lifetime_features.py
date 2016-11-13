@@ -42,32 +42,21 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
         return {'BMI': bmi}
 
 
-class FeatureConfig(object):
-
-    def __init__(self, feature_list, label_list, extra_data_list,
-                 concat_feature_hdf_path):
-        self.feature_list = feature_list
-        self.label_list = label_list
-        self.extra_data_list = extra_data_list
-        self.concat_feature_hdf_path = concat_feature_hdf_path
-
-
 def main():
     feature_generator = LifetimeFeatureGenerator(
         global_feature_hdf_path="global_feature.h5",
         data_csv_path='lifetime.csv')
 
-    feature_config = FeatureConfig(
-        label_list=['label'],
-        feature_list=['weight', 'height', 'BMI'],
-        extra_data_list=[],
-        concat_feature_hdf_path="concat_feature.h5")
+    feature_list = ['weight', 'height', 'BMI']
+    label_list = ['label']
 
-    feature_generator.generate(feature_config.feature_list
-                               + feature_config.extra_data_list
-                               + feature_config.label_list)
+    feature_generator.generate(feature_list + label_list)
 
-    fg.save_concat_features(feature_config, "global_feature.h5")
+    fg.save_concat_features(
+        feature_list=feature_list,
+        global_feature_hdf_path="global_feature.h5",
+        concat_feature_hdf_path="concat_feature.h5",
+        extra_data={'label': label_list})
 
 
 if __name__ == '__main__':
