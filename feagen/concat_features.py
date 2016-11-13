@@ -2,11 +2,12 @@ import gc
 
 import numpy as np
 import h5py
+import six
 from bistiming import IterTimer, SimpleTimer
 
 
 def fill_concat_features(feature_list, global_feature_h5f, concat_feature_h5f,
-                         buffer_size):
+                         buffer_size=int(1e+9)):
     feature_shapes = []
     for feature_name in feature_list:
         feature_shape = global_feature_h5f[feature_name].shape
@@ -55,24 +56,21 @@ def fill_concat_features(feature_list, global_feature_h5f, concat_feature_h5f,
         feature_d += feature_shape[1]
 
 
-def save_concat_features(feature_config, global_feature_hdf_path,
+def save_concat_features(feature_list, global_feature_hdf_path,
+                         concat_feature_hdf_path, extra_data=None,
                          buffer_size=int(1e+9)):
-
-    concat_feature_hdf_path = feature_config.concat_feature_hdf_path
-    feature_list = feature_config.feature_list
-
     with h5py.File(global_feature_hdf_path, 'r') as global_feature_h5f, \
             h5py.File(concat_feature_hdf_path, 'w') as concat_feature_h5f, \
-            SimpleTimer("Concating and saving features", end_in_new_line=False):
-        # save label
-        for label in feature_config.label_list:
-            concat_feature_h5f.create_dataset(
-                'label/' + label, data=global_feature_h5f[label])
+            SimpleTimer("Concatenating and saving features",
+                        end_in_new_line=False):
 
-        # save extra data
-        for data_name in feature_config.extra_data_list:
-            concat_feature_h5f.create_dataset(
-                'extra/' + data_name, data=global_feature_h5f[data_name])
+        if extra_data is not None:
+            # save extra data
+            for group_name, data_list in six.viewitems(extra_data):
+                group = concat_feature_h5f.create_group(group_name)
+                for data_name in data_list:
+                    group.create_dataset(data_name,
+                                         data=global_feature_h5f[data_name])
 
         # save extra features
         fill_concat_features(feature_list, global_feature_h5f,
