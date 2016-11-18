@@ -43,14 +43,17 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
         bmi = data_df['weight'] / ((data_df['height'] / 100) ** 2)
         return {'BMI': bmi}
 
-    # @features(skip_if_exist=True)
-    # @require_intermediate_data('data_df')
-    # @will_generate_one_of(r"\w+_divided_by_\w+")
-    # def gen_divided_by(self, will_generate_key, data):
-    #     import ipdb; ipdb.set_trace()
-    #     data_df = data['data_df']
-    #     division_result = data_df[data1] / data_df[data2]
-    #     return {will_generate_key: division_result}
+    @features(skip_if_exist=True)
+    @require_intermediate_data('data_df')
+    @will_generate_one_of(r'\w+_divided_by_\w+')
+    def gen_divided_by(self, will_generate_key, data):
+        import re
+        data_df = data['data_df']
+        matched = re.match(r"(?P<data1>\w+)_divided_by_(?P<data2>\w+)",
+                           will_generate_key)
+        division_result = (data_df[matched.group('data1')]
+                           / data_df[matched.group('data2')])
+        return {will_generate_key: division_result}
 
     @features(skip_if_exist=True)
     @require_intermediate_data('data_df')
@@ -68,8 +71,7 @@ def main():
         global_feature_hdf_path="global_feature.h5",
         data_csv_path='lifetime.csv')
 
-    feature_list = ['weight', 'height', 'BMI']
-    # feature_list = ['weight', 'height', 'BMI', 'weight_divided_by_height']
+    feature_list = ['weight', 'height', 'BMI', 'weight_divided_by_height']
     label_list = ['label']
     test_filter_list = ['is_in_test_set']
 

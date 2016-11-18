@@ -6,16 +6,16 @@ import numpy as np
 from bistiming import SimpleTimer
 
 
-def require_intermediate_data(data_names):
-    if isinstance(data_names, str):
-        data_names = (data_names,)
+def require_intermediate_data(data_keys):
+    if isinstance(data_keys, str):
+        data_keys = (data_keys,)
 
     def require_intermediate_data_decorator(func):
         @wraps(func)
-        def func_wrapper(self, set_name, new_data_name):
-            self.require(data_names, self._intermediate_data_dag)  # pylint: disable=protected-access
-            data = {key: self.intermediate_data[key] for key in data_names}
-            func(self, set_name, new_data_name, data=data)
+        def func_wrapper(self, set_name, new_data_key):
+            self.require(data_keys, self._intermediate_data_dag)  # pylint: disable=protected-access
+            data = {key: self.intermediate_data[key] for key in data_keys}
+            func(self, set_name, new_data_key, data=data)
         return func_wrapper
     return require_intermediate_data_decorator
 
@@ -36,38 +36,38 @@ def check_result_dict_type(result_dict, func_name):
 
 
 def check_redundant_keys(result_dict_key_set, will_generate_key_set,
-                         func_name, set_name, new_data_name):
+                         func_name, set_name, new_data_key):
     redundant_key_set = result_dict_key_set - will_generate_key_set
     if len(redundant_key_set) > 0:
         raise ValueError("the return keys of method {} {} have "
                          "redundant keys {} while generating {} {}".format(
                              func_name, result_dict_key_set, redundant_key_set,
-                             set_name, new_data_name))
+                             set_name, new_data_key))
 
 
 def check_exact_match_keys(result_dict_key_set, will_generate_key_set,
-                           func_name, set_name, new_data_name):
+                           func_name, set_name, new_data_key):
     if will_generate_key_set != result_dict_key_set:
         raise ValueError("the return keys of method {} {} doesn't "
                          "match {} while generating {} {}".format(
                              func_name, result_dict_key_set,
                              will_generate_key_set, set_name,
-                             new_data_name))
+                             new_data_key))
 
 
 def check_result_dict_keys(result_dict, will_generate_key_set,
-                           func_name, set_name, new_data_name,
+                           func_name, set_name, new_data_key,
                            manually_create_dataset):
 
     result_dict_key_set = set(result_dict.keys())
     if manually_create_dataset:
         check_redundant_keys(result_dict_key_set, will_generate_key_set,
-                             func_name, set_name, new_data_name)
+                             func_name, set_name, new_data_key)
         # TODO: check all the datasets is either manually created or in
         #       result_dict_key_set
     else:
         check_exact_match_keys(result_dict_key_set, will_generate_key_set,
-                               func_name, set_name, new_data_name)
+                               func_name, set_name, new_data_key)
 
 
 def write_global_feature_h5f(result_dict, global_feature_h5f):
@@ -92,8 +92,8 @@ def write_data(set_name, result_dict, intermediate_data, global_feature_h5f):
         raise NotImplementedError()
 
 
-def generate_data(self, func, set_name, new_data_name, func_name, kwargs):
-    with SimpleTimer("Generating {} {} using {}".format(set_name, new_data_name,
+def generate_data(self, func, set_name, new_data_key, func_name, kwargs):
+    with SimpleTimer("Generating {} {} using {}".format(set_name, new_data_key,
                                                         func_name),
                      end_in_new_line=False):  # pylint: disable=C0330
         result_dict = func(self, **kwargs)
@@ -111,17 +111,17 @@ def will_generate(will_generate_keys, manually_create_dataset=False):
         func._feagen_will_generate_keys = will_generate_keys  # pylint: disable=protected-access
 
         @wraps(func)
-        def func_wrapper(self, set_name, new_data_name, **kwargs):
+        def func_wrapper(self, set_name, new_data_key, **kwargs):
             func_name = func.__name__
             if manually_create_dataset and set_name == "features":
                 update_create_dataset_functions(
                     self.global_feature_h5f, will_generate_keys, kwargs)
-            result_dict = generate_data(self, func, set_name, new_data_name,
+            result_dict = generate_data(self, func, set_name, new_data_key,
                                         func_name, kwargs)
 
             check_result_dict_type(result_dict, func_name)
             check_result_dict_keys(result_dict, will_generate_key_set,
-                                   func_name, set_name, new_data_name,
+                                   func_name, set_name, new_data_key,
                                    manually_create_dataset)
             write_data(set_name, result_dict,
                        self.intermediate_data, self.global_feature_h5f)
@@ -138,18 +138,18 @@ def will_generate_one_of(will_generate_keys, manually_create_dataset=False):
         # func._feagen_will_generate_one_of_keys = will_generate_keys  # pylint: disable=protected-access
 
         @wraps(func)
-        def func_wrapper(self, set_name, new_data_name, **kwargs):
+        def func_wrapper(self, set_name, new_data_key, **kwargs):
             func_name = func.__name__
             if manually_create_dataset and set_name == "features":
                 update_create_dataset_functions(
                     self.global_feature_h5f, will_generate_keys, kwargs)
-            kwargs['new_data_name'] = new_data_name
-            result_dict = generate_data(self, func, set_name, new_data_name,
+            kwargs['will_generate_key'] = new_data_key
+            result_dict = generate_data(self, func, set_name, new_data_key,
                                         func_name, kwargs)
 
             check_result_dict_type(result_dict, func_name)
-            check_result_dict_keys(result_dict, set([new_data_name]),
-                                   func_name, set_name, new_data_name,
+            check_result_dict_keys(result_dict, set([new_data_key]),
+                                   func_name, set_name, new_data_key,
                                    manually_create_dataset)
             write_data(set_name, result_dict,
                        self.intermediate_data, self.global_feature_h5f)
