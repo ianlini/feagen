@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split
 import feagen as fg
 from feagen.decorators import (
     will_generate,
+    will_generate_one_of,
     require_intermediate_data,
     features,
     intermediate_data,
@@ -46,6 +47,7 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
     # @require_intermediate_data('data_df')
     # @will_generate_one_of(r"\w+_divided_by_\w+")
     # def gen_divided_by(self, will_generate_key, data):
+    #     import ipdb; ipdb.set_trace()
     #     data_df = data['data_df']
     #     division_result = data_df[data1] / data_df[data2]
     #     return {will_generate_key: division_result}
@@ -60,7 +62,6 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
         is_in_test_set = data_df.index.isin(test_id)
         return {'is_in_test_set': is_in_test_set}
 
-# import ipdb; ipdb.set_trace()
 
 def main():
     feature_generator = LifetimeFeatureGenerator(
