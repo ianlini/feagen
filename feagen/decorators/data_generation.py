@@ -108,12 +108,14 @@ def will_generate(will_generate_keys, manually_create_dataset=False):
     will_generate_key_set = set(will_generate_keys)
 
     def will_generate_decorator(func):
-        func._feagen_will_generate_keys = will_generate_keys  # pylint: disable=protected-access
+        # pylint: disable=protected-access
+        func._feagen_will_generate_keys = will_generate_keys
+        func._feagen_manually_create_dataset = manually_create_dataset
 
         @wraps(func)
         def func_wrapper(self, set_name, new_data_key, **kwargs):
             func_name = func.__name__
-            if manually_create_dataset and set_name == "features":
+            if manually_create_dataset:
                 update_create_dataset_functions(
                     self.global_feature_h5f, will_generate_keys, kwargs)
             result_dict = generate_data(self, func, set_name, new_data_key,
@@ -134,12 +136,14 @@ def will_generate_one_of(will_generate_keys, manually_create_dataset=False):
         will_generate_keys = (will_generate_keys,)
 
     def will_generate_decorator(func):
-        func._feagen_will_generate_keys = will_generate_keys  # pylint: disable=protected-access
+        # pylint: disable=protected-access
+        func._feagen_will_generate_keys = will_generate_keys
+        func._feagen_manually_create_dataset = manually_create_dataset
 
         @wraps(func)
         def func_wrapper(self, set_name, new_data_key, **kwargs):
             func_name = func.__name__
-            if manually_create_dataset and set_name == "features":
+            if manually_create_dataset:
                 update_create_dataset_functions(
                     self.global_feature_h5f, will_generate_keys, kwargs)
             kwargs['will_generate_key'] = new_data_key
