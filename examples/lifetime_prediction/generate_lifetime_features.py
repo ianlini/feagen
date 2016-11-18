@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split
 import feagen as fg
 from feagen.decorators import (
     will_generate,
+    will_generate_one_of,
     require_intermediate_data,
     features,
     intermediate_data,
@@ -44,6 +45,18 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
 
     @features(skip_if_exist=True)
     @require_intermediate_data('data_df')
+    @will_generate_one_of(r'\w+_divided_by_\w+')
+    def gen_divided_by(self, will_generate_key, data):
+        import re
+        data_df = data['data_df']
+        matched = re.match(r"(?P<data1>\w+)_divided_by_(?P<data2>\w+)",
+                           will_generate_key)
+        division_result = (data_df[matched.group('data1')]
+                           / data_df[matched.group('data2')])
+        return {will_generate_key: division_result}
+
+    @features(skip_if_exist=True)
+    @require_intermediate_data('data_df')
     @will_generate('is_in_test_set')
     def gen_is_in_test_set(self, data):
         data_df = data['data_df']
@@ -58,7 +71,7 @@ def main():
         global_feature_hdf_path="global_feature.h5",
         data_csv_path='lifetime.csv')
 
-    feature_list = ['weight', 'height', 'BMI']
+    feature_list = ['weight', 'height', 'BMI', 'weight_divided_by_height']
     label_list = ['label']
     test_filter_list = ['is_in_test_set']
 
