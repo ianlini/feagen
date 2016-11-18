@@ -42,6 +42,14 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
         bmi = data_df['weight'] / ((data_df['height'] / 100) ** 2)
         return {'BMI': bmi}
 
+    # @features(skip_if_exist=True)
+    # @require_intermediate_data('data_df')
+    # @will_generate_one_of(r"\w+_divided_by_\w+")
+    # def gen_divided_by(self, will_generate_key, data):
+    #     data_df = data['data_df']
+    #     division_result = data_df[data1] / data_df[data2]
+    #     return {will_generate_key: division_result}
+
     @features(skip_if_exist=True)
     @require_intermediate_data('data_df')
     @will_generate('is_in_test_set')
@@ -52,6 +60,7 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
         is_in_test_set = data_df.index.isin(test_id)
         return {'is_in_test_set': is_in_test_set}
 
+# import ipdb; ipdb.set_trace()
 
 def main():
     feature_generator = LifetimeFeatureGenerator(
@@ -59,6 +68,7 @@ def main():
         data_csv_path='lifetime.csv')
 
     feature_list = ['weight', 'height', 'BMI']
+    # feature_list = ['weight', 'height', 'BMI', 'weight_divided_by_height']
     label_list = ['label']
     test_filter_list = ['is_in_test_set']
 

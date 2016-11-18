@@ -55,6 +55,14 @@ def require_intermediate_data(data_names):
     return require_intermediate_data_decorator
 
 
+def update_create_dataset_functions(global_feature_h5f, will_generate_keys,
+                                    kwargs):
+    kwargs['create_dataset_functions'] = {
+        k: partial(global_feature_h5f.create_dataset, k)
+        for k in will_generate_keys
+    }
+
+
 def will_generate(will_generate_keys, manually_create_dataset=False):
     if isinstance(will_generate_keys, str):
         will_generate_keys = (will_generate_keys,)
@@ -65,11 +73,9 @@ def will_generate(will_generate_keys, manually_create_dataset=False):
 
         @wraps(func)
         def func_wrapper(self, set_name, new_data_name, **kwargs):
-            if manually_create_dataset:
-                kwargs['create_dataset_functions'] = {
-                    k: partial(self.global_feature_h5f.create_dataset, k)
-                    for k in will_generate_key_set
-                }
+            if manually_create_dataset and set_name == "features":
+                update_create_dataset_functions(
+                    self.global_feature_h5f, will_generate_keys, kwargs)
             with SimpleTimer("Generating {} {} using {}"
                              .format(set_name, new_data_name, func.__name__),
                              end_in_new_line=False):  # pylint: disable=C0330
