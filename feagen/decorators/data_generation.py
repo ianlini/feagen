@@ -92,6 +92,16 @@ def write_data(set_name, result_dict, intermediate_data, global_feature_h5f):
         raise NotImplementedError()
 
 
+def generate_data(self, func, set_name, new_data_name, func_name, kwargs):
+    with SimpleTimer("Generating {} {} using {}".format(set_name, new_data_name,
+                                                        func_name),
+                     end_in_new_line=False):  # pylint: disable=C0330
+        result_dict = func(self, **kwargs)
+    if result_dict is None:
+        result_dict = {}
+    return result_dict
+
+
 def will_generate(will_generate_keys, manually_create_dataset=False):
     if isinstance(will_generate_keys, str):
         will_generate_keys = (will_generate_keys,)
@@ -106,12 +116,8 @@ def will_generate(will_generate_keys, manually_create_dataset=False):
             if manually_create_dataset and set_name == "features":
                 update_create_dataset_functions(
                     self.global_feature_h5f, will_generate_keys, kwargs)
-            with SimpleTimer("Generating {} {} using {}"
-                             .format(set_name, new_data_name, func_name),
-                             end_in_new_line=False):  # pylint: disable=C0330
-                result_dict = func(self, **kwargs)
-            if result_dict is None:
-                result_dict = {}
+            result_dict = generate_data(self, func, set_name, new_data_name,
+                                        func_name, kwargs)
 
             check_result_dict_type(result_dict, func_name)
             check_result_dict_keys(result_dict, will_generate_key_set,
