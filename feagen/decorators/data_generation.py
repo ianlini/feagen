@@ -135,7 +135,6 @@ def will_generate_one_of(will_generate_keys, manually_create_dataset=False):
 
     def will_generate_decorator(func):
         func._feagen_will_generate_keys = will_generate_keys  # pylint: disable=protected-access
-        # func._feagen_will_generate_one_of_keys = will_generate_keys  # pylint: disable=protected-access
 
         @wraps(func)
         def func_wrapper(self, set_name, new_data_key, **kwargs):
