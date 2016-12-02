@@ -71,7 +71,7 @@ def check_result_dict_keys(result_dict, will_generate_key_set,
 
 
 def write_global_feature_h5f(result_dict, global_feature_h5f):
-    for key, result in six.viewitems(result_dict):
+    for key, result in six.iteritems(result_dict):
         if np.isnan(result).any():
             raise ValueError("features {} have nan".format(key))
         with SimpleTimer("Writing generated features {} to hdf5 file"
