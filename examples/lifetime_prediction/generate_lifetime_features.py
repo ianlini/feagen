@@ -66,9 +66,10 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
         return {'is_in_test_set': is_in_test_set}
 
 
-def main():
+def generate_lifetime_features(global_feature_hdf_path,
+                               concat_feature_hdf_path):
     feature_generator = LifetimeFeatureGenerator(
-        global_feature_hdf_path="global_feature.h5",
+        global_feature_hdf_path=global_feature_hdf_path,
         data_csv_path='lifetime.csv')
 
     feature_list = ['weight', 'height', 'BMI', 'weight_divided_by_height']
@@ -79,10 +80,10 @@ def main():
 
     fg.save_concat_features(
         feature_list=feature_list,
-        global_feature_hdf_path="global_feature.h5",
-        concat_feature_hdf_path="concat_feature.h5",
+        global_feature_hdf_path=global_feature_hdf_path,
+        concat_feature_hdf_path=concat_feature_hdf_path,
         extra_data={'label': label_list, 'test_filter_list': test_filter_list})
 
 
 if __name__ == '__main__':
-    main()
+    generate_lifetime_features("global_feature.h5", "concat_feature.h5")

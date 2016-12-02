@@ -4,5 +4,6 @@ h5py
 bistiming
 numpy
 
+# for testing
 pylint
 tox
