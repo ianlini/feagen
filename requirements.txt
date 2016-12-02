@@ -7,3 +7,11 @@ numpy
 # for testing
 pylint
 tox
+
+# for example
+pandas
+scikit-learn
+# for Python 2: progressbar
+# for Python 3: progressbar33
+# progressbar
+progressbar33

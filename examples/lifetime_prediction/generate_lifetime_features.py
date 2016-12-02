@@ -1,3 +1,5 @@
+import os.path
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import feagen as fg
@@ -68,9 +70,12 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
 
 def generate_lifetime_features(global_feature_hdf_path,
                                concat_feature_hdf_path):
+
+    data_csv_dir = os.path.dirname(os.path.abspath(__file__))
+    data_csv_path = os.path.join(data_csv_dir, 'lifetime.csv')
     feature_generator = LifetimeFeatureGenerator(
         global_feature_hdf_path=global_feature_hdf_path,
-        data_csv_path='lifetime.csv')
+        data_csv_path=data_csv_path)
 
     feature_list = ['weight', 'height', 'BMI', 'weight_divided_by_height']
     label_list = ['label']
