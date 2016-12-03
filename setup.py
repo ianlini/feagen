@@ -18,7 +18,7 @@ else:
         'six',
         'mkdir-p',
         'h5py',
-        'bistiming',
+        'bistiming>=0.1.1',
         'numpy',
     ]
     tests_require = []
