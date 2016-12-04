@@ -118,6 +118,13 @@ def _run_function(function, handler_key, will_generate_keys, kwargs):
     return result_dict
 
 
+def check_result_dict_type(result_dict, function_name):
+    if not (hasattr(result_dict, 'keys')
+            and hasattr(result_dict, '__getitem__')):
+        raise ValueError("the return value of mehod {} should have "
+                         "keys and __getitem__ methods".format(function_name))
+
+
 class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
 
     def __init__(self, handlers):
@@ -157,8 +164,10 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
         function = getattr(self, node)
         result_dict = _run_function(function, handler_key, will_generate_keys,
                                     function_kwargs)
-
-        import ipdb; ipdb.set_trace()
+        check_result_dict_type(result_dict, node)
+        handler.check_result_dict_keys(result_dict, will_generate_keys, node,
+                                       handler_key, **handler_kwargs)
+        handler.write_data(result_dict)
 
     def generate(self, data_keys):
         if isinstance(data_keys, str):
@@ -192,7 +201,6 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
                         data_key, mode, node_attr['handler_kwargs'])
             else:
                 raise ValueError("Mode '%s' is not supported." % mode)
-        import ipdb; ipdb.set_trace()
 
         return involved_dag
 
