@@ -129,29 +129,35 @@ def generate_data(self, func, set_name, new_data_key, func_name, kwargs):
 def will_generate(will_generate_keys, manually_create_dataset=False):
     if isinstance(will_generate_keys, str):
         will_generate_keys = (will_generate_keys,)
-    will_generate_key_set = set(will_generate_keys)
+    # will_generate_key_set = set(will_generate_keys)
 
     def will_generate_decorator(func):
         # pylint: disable=protected-access
-        func._feagen_will_generate_keys = will_generate_keys
-        func._feagen_manually_create_dataset = manually_create_dataset
+        if hasattr(func, '_feagen_will_generate'):
+            raise NotImplementedError("Multiple will_generate is not supported"
+                                      "currently.")
+        func._feagen_will_generate = {
+            'model': 'full',
+            'keys': will_generate_keys,
+            'manually_create_dataset': manually_create_dataset,
+        }
 
-        @wraps(func)
-        def func_wrapper(self, set_name, new_data_key, **kwargs):
-            func_name = func.__name__
-            if manually_create_dataset:
-                update_create_dataset_functions(
-                    self.global_feature_h5f, will_generate_keys, kwargs)
-            result_dict = generate_data(self, func, set_name, new_data_key,
-                                        func_name, kwargs)
+        # @wraps(func)
+        # def func_wrapper(self, set_name, new_data_key, **kwargs):
+        #     func_name = func.__name__
+        #     if manually_create_dataset:
+        #         update_create_dataset_functions(
+        #             self.global_feature_h5f, will_generate_keys, kwargs)
+        #     result_dict = generate_data(self, func, set_name, new_data_key,
+        #                                 func_name, kwargs)
 
-            check_result_dict_type(result_dict, func_name)
-            check_result_dict_keys(result_dict, will_generate_key_set,
-                                   func_name, set_name, new_data_key,
-                                   manually_create_dataset)
-            write_data(set_name, result_dict,
-                       self.intermediate_data, self.global_feature_h5f)
-        return func_wrapper
+        #     check_result_dict_type(result_dict, func_name)
+        #     check_result_dict_keys(result_dict, will_generate_key_set,
+        #                            func_name, set_name, new_data_key,
+        #                            manually_create_dataset)
+        #     write_data(set_name, result_dict,
+        #                self.intermediate_data, self.global_feature_h5f)
+        return func
     return will_generate_decorator
 
 
@@ -159,26 +165,32 @@ def will_generate_one_of(will_generate_keys, manually_create_dataset=False):
     if isinstance(will_generate_keys, str):
         will_generate_keys = (will_generate_keys,)
 
-    def will_generate_decorator(func):
+    def will_generate_one_of_decorator(func):
         # pylint: disable=protected-access
-        func._feagen_will_generate_keys = will_generate_keys
-        func._feagen_manually_create_dataset = manually_create_dataset
+        if hasattr(func, '_feagen_will_generate'):
+            raise NotImplementedError("Multiple will_generate is not supported"
+                                      "currently.")
+        func._feagen_will_generate = {
+            'model': 'one',
+            'keys': will_generate_keys,
+            'manually_create_dataset': manually_create_dataset,
+        }
 
-        @wraps(func)
-        def func_wrapper(self, set_name, new_data_key, **kwargs):
-            func_name = func.__name__
-            if manually_create_dataset:
-                update_create_dataset_functions(
-                    self.global_feature_h5f, will_generate_keys, kwargs)
-            kwargs['will_generate_key'] = new_data_key
-            result_dict = generate_data(self, func, set_name, new_data_key,
-                                        func_name, kwargs)
+        # @wraps(func)
+        # def func_wrapper(self, set_name, new_data_key, **kwargs):
+        #     func_name = func.__name__
+        #     if manually_create_dataset:
+        #         update_create_dataset_functions(
+        #             self.global_feature_h5f, will_generate_keys, kwargs)
+        #     kwargs['will_generate_key'] = new_data_key
+        #     result_dict = generate_data(self, func, set_name, new_data_key,
+        #                                 func_name, kwargs)
 
-            check_result_dict_type(result_dict, func_name)
-            check_result_dict_keys(result_dict, set([new_data_key]),
-                                   func_name, set_name, new_data_key,
-                                   manually_create_dataset)
-            write_data(set_name, result_dict,
-                       self.intermediate_data, self.global_feature_h5f)
-        return func_wrapper
-    return will_generate_decorator
+        #     check_result_dict_type(result_dict, func_name)
+        #     check_result_dict_keys(result_dict, set([new_data_key]),
+        #                            func_name, set_name, new_data_key,
+        #                            manually_create_dataset)
+        #     write_data(set_name, result_dict,
+        #                self.intermediate_data, self.global_feature_h5f)
+        return func
+    return will_generate_one_of_decorator
