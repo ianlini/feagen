@@ -31,7 +31,7 @@ long_description = ("See `github <https://github.com/ianlini/feagen>`_ "
 
 setup(
     name='feagen',
-    version="0.3.2",
+    version="1.0.0a0",
     description=description,
     long_description=long_description,
     author='ianlini',
