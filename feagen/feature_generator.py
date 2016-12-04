@@ -125,12 +125,14 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
             data.update(source_handler.get(attr['keys']))
         return data
 
-    def _generate_one(self, dag, node, handler_key, will_generate_key_set):
+    def _generate_one(self, dag, node, handler_key, will_generate_key_set,
+                      handler_kwargs):
         handler = self._handlers[handler_key]
         if handler.can_skip(will_generate_key_set):
             return
         data = self._get_upstream_data(dag, node)
         function = getattr(self, node)
+
         import ipdb; ipdb.set_trace()
 
     def generate(self, data_keys):
@@ -156,12 +158,12 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
             if node_attr['mode'] == 'full':
                 self._generate_one(
                     involved_dag, node, node_attr['handler'],
-                    will_generate_key_set)
+                    will_generate_key_set, node_attr['handler_kwargs'])
             elif node_attr['mode'] == 'one':
                 for data_key in will_generate_key_set:
                     self._generate_one(
                         involved_dag, node, node_attr['handler'],
-                        set([data_key]))
+                        set([data_key]), node_attr['handler_kwargs'])
         import ipdb; ipdb.set_trace()
 
         return involved_dag

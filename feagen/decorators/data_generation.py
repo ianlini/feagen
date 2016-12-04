@@ -105,8 +105,7 @@ def generate_data(self, func, set_name, new_data_key, func_name, kwargs):
     return result_dict
 
 
-def will_generate(data_handler, will_generate_keys,
-                  manually_create_dataset=False):
+def will_generate(data_handler, will_generate_keys, **handler_kwargs):
     if isinstance(will_generate_keys, str):
         will_generate_keys = (will_generate_keys,)
     # will_generate_key_set = set(will_generate_keys)
@@ -120,7 +119,7 @@ def will_generate(data_handler, will_generate_keys,
             'mode': 'full',
             'handler': data_handler,
             'keys': will_generate_keys,
-            'manually_create_dataset': manually_create_dataset,
+            'handler_kwargs': handler_kwargs,
         }
 
         # @wraps(func)
@@ -142,8 +141,7 @@ def will_generate(data_handler, will_generate_keys,
     return will_generate_decorator
 
 
-def will_generate_one_of(data_handler, will_generate_keys,
-                         manually_create_dataset=False):
+def will_generate_one_of(data_handler, will_generate_keys, **handler_kwargs):
     if isinstance(will_generate_keys, str):
         will_generate_keys = (will_generate_keys,)
 
@@ -156,7 +154,7 @@ def will_generate_one_of(data_handler, will_generate_keys,
             'mode': 'one',
             'handler': data_handler,
             'keys': will_generate_keys,
-            'manually_create_dataset': manually_create_dataset,
+            'handler_kwargs': handler_kwargs,
         }
 
         # @wraps(func)
