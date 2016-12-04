@@ -98,10 +98,10 @@ class FeatureGeneratorType(type):
         for function_name, function in attrs:
             dag.add_node(function_name, function)
             handler_set.add(function._feagen_will_generate['handler'])
-            del function._feagen_will_generate
+            del function.__dict__['_feagen_will_generate']
             if hasattr(function, '_feagen_require'):
                 requirements.append((function_name, function._feagen_require))
-                del function._feagen_require
+                del function.__dict__['_feagen_require']
         dag.add_edges_from(requirements)
         cls._dag = dag
         cls._handler_set = handler_set
@@ -157,7 +157,7 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
         function_kwargs = handler.get_function_kwargs(
             will_generate_keys=will_generate_keys,
             data=data,
-            **handler_kwargs,
+            **handler_kwargs
         )
         if mode == 'one':
             function_kwargs['will_generate_key'] = will_generate_key
