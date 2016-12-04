@@ -45,7 +45,7 @@ class FeatureGeneratorType(type):
         cls = super(FeatureGeneratorType, mcs).__new__(
             mcs, clsname, bases, dct)
         attrs = inspect.getmembers(
-            cls, lambda a: hasattr(a, '_feagen_data_type'))
+            cls, lambda a: hasattr(a, '_feagen_will_generate'))
 
         dag_dict = {
             'features': RegexDAG(),

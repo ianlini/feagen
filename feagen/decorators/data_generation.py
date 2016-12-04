@@ -1,5 +1,4 @@
 from __future__ import print_function
-from functools import wraps, partial
 
 import six
 import numpy as np
@@ -22,19 +21,15 @@ from ..data_handler import get_data_handler
 #     return require_intermediate_data_decorator
 
 
-def require(data_handler, data_keys):
+def require(data_keys):
     if isinstance(data_keys, str):
         data_keys = (data_keys,)
-    data_handler = get_data_handler(data_handler)
 
     def require_decorator(func):
         # pylint: disable=protected-access
         if hasattr(func, '_feagen_require'):
             func._feagen_require = []
-        func._feagen_require.append({
-            'handler': data_handler,
-            'keys': data_keys,
-        })
+        func._feagen_require.append(data_keys)
         # @wraps(func)
         # def func_wrapper(self, set_name, new_data_key):
         #     self.require(data_keys, self._intermediate_data_dag)  # pylint: disable=protected-access
@@ -126,18 +121,21 @@ def generate_data(self, func, set_name, new_data_key, func_name, kwargs):
     return result_dict
 
 
-def will_generate(will_generate_keys, manually_create_dataset=False):
+def will_generate(data_handler, will_generate_keys,
+                  manually_create_dataset=False):
     if isinstance(will_generate_keys, str):
         will_generate_keys = (will_generate_keys,)
     # will_generate_key_set = set(will_generate_keys)
+    data_handler = get_data_handler(data_handler)
 
     def will_generate_decorator(func):
         # pylint: disable=protected-access
         if hasattr(func, '_feagen_will_generate'):
             raise NotImplementedError("Multiple will_generate is not supported"
-                                      "currently.")
+                                      "yet.")
         func._feagen_will_generate = {
-            'model': 'full',
+            'mode': 'full',
+            'handler': data_handler,
             'keys': will_generate_keys,
             'manually_create_dataset': manually_create_dataset,
         }
@@ -161,17 +159,20 @@ def will_generate(will_generate_keys, manually_create_dataset=False):
     return will_generate_decorator
 
 
-def will_generate_one_of(will_generate_keys, manually_create_dataset=False):
+def will_generate_one_of(data_handler, will_generate_keys,
+                         manually_create_dataset=False):
     if isinstance(will_generate_keys, str):
         will_generate_keys = (will_generate_keys,)
+    data_handler = get_data_handler(data_handler)
 
     def will_generate_one_of_decorator(func):
         # pylint: disable=protected-access
         if hasattr(func, '_feagen_will_generate'):
             raise NotImplementedError("Multiple will_generate is not supported"
-                                      "currently.")
+                                      "yet.")
         func._feagen_will_generate = {
-            'model': 'one',
+            'mode': 'one',
+            'handler': data_handler,
             'keys': will_generate_keys,
             'manually_create_dataset': manually_create_dataset,
         }

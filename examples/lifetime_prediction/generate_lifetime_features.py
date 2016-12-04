@@ -20,26 +20,26 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
     def gen_data_df(self):
         return {'data_df': pd.read_csv(self.data_csv_path, index_col='id')}
 
-    @require('intermediate_data', 'data_df')
+    @require('data_df')
     @will_generate('features', 'label')
     def gen_label(self, data):
         data_df = data['data_df']
         return {'label': data_df['lifetime']}
 
-    @require('intermediate_data', 'data_df')
+    @require('data_df')
     @will_generate('features', ['weight', 'height'])
     def gen_raw_data_features(self, data):
         data_df = data['data_df']
         return data_df[['weight', 'height']]
 
-    @require('intermediate_data', 'data_df')
+    @require('data_df')
     @will_generate('features', 'BMI')
     def gen_bmi(self, data):
         data_df = data['data_df']
         bmi = data_df['weight'] / ((data_df['height'] / 100) ** 2)
         return {'BMI': bmi}
 
-    @require('intermediate_data', 'data_df')
+    @require('data_df')
     @will_generate_one_of('features', r'\w+_divided_by_\w+')
     def gen_divided_by(self, will_generate_key, data):
         import re
@@ -50,7 +50,7 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
                            / data_df[matched.group('data2')])
         return {will_generate_key: division_result}
 
-    @require('intermediate_data', 'data_df')
+    @require('data_df')
     @will_generate('features', 'is_in_test_set')
     def gen_is_in_test_set(self, data):
         data_df = data['data_df']
