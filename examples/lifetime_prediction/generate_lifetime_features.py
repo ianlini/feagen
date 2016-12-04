@@ -73,7 +73,8 @@ def generate_lifetime_features(global_feature_hdf_path,
     label_list = ['label']
     test_filter_list = ['is_in_test_set']
 
-    feature_generator.generate(feature_list + label_list + test_filter_list)
+    involved_dag = feature_generator.generate(
+        feature_list + label_list + test_filter_list)
 
     fg.save_concat_features(
         feature_list=feature_list,
@@ -81,7 +82,16 @@ def generate_lifetime_features(global_feature_hdf_path,
         concat_feature_hdf_path=concat_feature_hdf_path,
         extra_data={'label': label_list, 'test_filter_list': test_filter_list})
 
+    return involved_dag
+
+
+def main():
+    from feagen.feature_generator import draw_dag
+    LifetimeFeatureGenerator.draw_dag('dag.png')
+    involved_dag = generate_lifetime_features("global_feature.h5",
+                                              "concat_feature.h5")
+    draw_dag(involved_dag, 'involved_dag.png')
+
 
 if __name__ == '__main__':
-    LifetimeFeatureGenerator.draw_dag('dag.png')
-    generate_lifetime_features("global_feature.h5", "concat_feature.h5")
+    main()
