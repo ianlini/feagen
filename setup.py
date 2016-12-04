@@ -20,6 +20,7 @@ else:
         'h5py',
         'bistiming>=0.1.1',
         'numpy',
+        'networkx',
     ]
     tests_require = []
 

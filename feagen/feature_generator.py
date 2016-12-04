@@ -5,13 +5,15 @@ import re
 import h5py
 from mkdir_p import mkdir_p
 import six
+import networkx as nx
 
 
-class RegexDAG(object):
+class DataDAG(object):
     # TODO: This is not really a DAG
 
     def __init__(self):
         self._data_node_dict = {}
+        self._dag = nx.DiGraph()
 
     def add(self, key, value, upstream=None):  # pylint: disable=unused-argument
         # TODO: set DAG
