@@ -59,7 +59,6 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
         is_in_test_set = data_df.index.isin(test_id)
         return {'is_in_test_set': is_in_test_set}
 
-import ipdb; ipdb.set_trace()
 
 def generate_lifetime_features(global_feature_hdf_path,
                                concat_feature_hdf_path):
@@ -84,4 +83,5 @@ def generate_lifetime_features(global_feature_hdf_path,
 
 
 if __name__ == '__main__':
+    LifetimeFeatureGenerator.draw_dag('dag.png')
     generate_lifetime_features("global_feature.h5", "concat_feature.h5")

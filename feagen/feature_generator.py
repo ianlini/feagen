@@ -1,6 +1,7 @@
 import os.path
 import inspect
 import re
+from collections import defaultdict
 
 import h5py
 from mkdir_p import mkdir_p
@@ -27,13 +28,18 @@ class DataDAG(object):
 
         self._nx_dag.add_node(function_name, config, function=function)
 
+    def get_node_keys_dict(self, data_keys):
+        node_keys_dict = defaultdict(list)
+        for data_key in data_keys:
+            node_keys_dict[self[data_key]].append(data_key)
+        return node_keys_dict
 
     def add_edges_from(self, requirements):
         edges = []
         for function_name, function_requirements in requirements:
-            for requirement in function_requirements:
-                edges.append((self._data_key_node_dict[requirement],
-                              function_name))
+            node_keys_dict = self.get_node_keys_dict(function_requirements)
+            for source_node, data_keys in six.viewitems(node_keys_dict):
+                edges.append((source_node, function_name, {'keys': data_keys}))
         self._nx_dag.add_edges_from(edges)
         if not nx.is_directed_acyclic_graph(self._nx_dag):
             raise ValueError("The dependency graph has cycle.")
@@ -41,7 +47,7 @@ class DataDAG(object):
     def __getitem__(self, key):
         found_node = None
         found_key = None
-        for regex_key, node in six.viewitems(self._data_node_dict):
+        for regex_key, node in six.viewitems(self._data_key_node_dict):
             if re.match("(%s)$" % regex_key, key) is not None:
                 if found_node is None:
                     found_node = node
@@ -55,8 +61,12 @@ class DataDAG(object):
             raise KeyError(key)
         return found_node
 
-    def __contains__(self, key):
-        return key in self._data_node_dict
+    def draw(self, path):
+        agraph = nx.nx_agraph.to_agraph(self._nx_dag)
+        for edge in agraph.edges_iter():
+            edge.attr['label'] = edge.attr['keys']
+        agraph.layout('dot')
+        agraph.draw(path)
 
 
 class FeatureGeneratorType(type):
@@ -90,18 +100,13 @@ class FeatureGenerator(six.with_metaclass(FeatureGeneratorType, object)):
             mkdir_p(global_feature_hdf_dir)
         self.global_feature_h5f = h5py.File(global_feature_hdf_path, 'a')
 
-    def generate(self, feature_names):
-        if isinstance(feature_names, str):
-            feature_names = [feature_names]
-        self.require(feature_names, self._feature_dag)
-
-    def require(self, keys, dag):
-        for key in keys:
-            getattr(self, dag[key])(key)
+    def generate(self, data_keys):
+        if isinstance(data_keys, str):
+            data_keys = (data_keys,)
+        node_keys_dict = self._dag.get_node_keys_dict(data_keys)
+        import ipdb
+        ipdb.set_trace()
 
     @classmethod
     def draw_dag(cls, path):
-        # pylint: disable=protected-access
-        agraph = nx.nx_agraph.to_agraph(cls._dag._nx_dag)
-        agraph.layout('dot')
-        agraph.draw(path)
+        cls._dag.draw(path)  # pylint: disable=protected-access
