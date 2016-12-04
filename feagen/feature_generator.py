@@ -1,10 +1,7 @@
-import os.path
 import inspect
 import re
 from collections import defaultdict
 
-import h5py
-from mkdir_p import mkdir_p
 import six
 import networkx as nx
 
@@ -121,10 +118,20 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
                                      lacked_handlers_set))
         self._handlers = handlers
 
+    def _get_upstream_data(self, dag, node):
+        data = {}
+        for source, _, attr in dag.in_edges_iter(node, data=True):
+            source_handler = self._handlers[dag.node[source]['handler']]
+            data.update(source_handler.get(attr['keys']))
+        return data
+
     def _generate_one(self, dag, node, handler_key, will_generate_key_set):
         handler = self._handlers[handler_key]
+        if handler.can_skip(will_generate_key_set):
+            return
+        data = self._get_upstream_data(dag, node)
         function = getattr(self, node)
-        print(handler.can_skip(will_generate_key_set))
+        import ipdb; ipdb.set_trace()
 
     def generate(self, data_keys):
         if isinstance(data_keys, str):

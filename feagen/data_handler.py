@@ -28,6 +28,11 @@ class HDF5DataHandler(DataHandler):
             return True
         return False
 
+    def get(self, keys):
+        if isinstance(keys, str):
+            keys = (keys,)
+        return {key: self.h5f[key] for key in keys}
+
 class MemoryIntermediateDataHandler(DataHandler):
     def __init__(self):
         self.data = {}
@@ -41,3 +46,8 @@ class MemoryIntermediateDataHandler(DataHandler):
         if new_data_key_set <= generated_set:
             return True
         return False
+
+    def get(self, keys):
+        if isinstance(keys, str):
+            keys = (keys,)
+        return {key: self.data[key] for key in keys}

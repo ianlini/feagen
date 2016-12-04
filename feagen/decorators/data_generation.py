@@ -5,20 +5,6 @@ import numpy as np
 from bistiming import SimpleTimer
 
 
-# def require_intermediate_data(data_keys):
-#     if isinstance(data_keys, str):
-#         data_keys = (data_keys,)
-
-#     def require_intermediate_data_decorator(func):
-#         @wraps(func)
-#         def func_wrapper(self, set_name, new_data_key):
-#             self.require(data_keys, self._intermediate_data_dag)  # pylint: disable=protected-access
-#             data = {key: self.intermediate_data[key] for key in data_keys}
-#             func(self, set_name, new_data_key, data=data)
-#         return func_wrapper
-#     return require_intermediate_data_decorator
-
-
 def require(data_keys):
     if isinstance(data_keys, str):
         data_keys = (data_keys,)
