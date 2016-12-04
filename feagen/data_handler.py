@@ -40,10 +40,8 @@ class HDF5DataHandler(DataHandler):
             mkdir_p(hdf_dir)
         self.h5f = h5py.File(hdf_path, 'a')
 
-    def can_skip(self, new_data_keys):
-        new_data_key_set = set(map(lambda s: "/" + s, new_data_keys))
-        generated_set = set(self.h5f.keys())
-        if new_data_key_set <= generated_set:
+    def can_skip(self, data_key):
+        if "/" + data_key in self.h5f.keys():
             return True
         return False
 
@@ -96,10 +94,8 @@ class MemoryIntermediateDataHandler(DataHandler):
     def __init__(self):
         self.data = {}
 
-    def can_skip(self, new_data_keys):
-        new_data_key_set = set(new_data_keys)
-        generated_set = set(six.viewkeys(self.data))
-        if new_data_key_set <= generated_set:
+    def can_skip(self, data_key):
+        if data_key in self.data:
             return True
         return False
 

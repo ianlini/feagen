@@ -16,6 +16,14 @@ def draw_dag(nx_dag, path):
     agraph = nx.nx_agraph.to_agraph(nx_dag)
     for edge in agraph.edges_iter():
         edge.attr['label'] = edge.attr['keys']
+        if edge.attr['keys'] == "[]":
+            edge.attr['label'] = ""
+        if (edge.attr['skipped_keys'] != "[]"
+                and edge.attr['skipped_keys'] is not None):
+            edge.attr['label'] += "(%s skipped)" % edge.attr['skipped_keys']
+    for node in agraph.nodes_iter():
+        if node.attr['skipped'] == "True":
+            node.attr['label'] = str(node) + " (skipped)"
     agraph.layout('dot')
     agraph.draw(path)
 
@@ -151,8 +159,6 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
             will_generate_key = will_generate_keys
             will_generate_keys = (will_generate_key,)
         handler = self._handlers[handler_key]
-        if handler.can_skip(will_generate_keys):
-            return
         data = self._get_upstream_data(dag, node)
         function_kwargs = handler.get_function_kwargs(
             will_generate_keys=will_generate_keys,
@@ -169,6 +175,30 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
                                        handler_key, **handler_kwargs)
         handler.write_data(result_dict)
 
+    def dag_prune_can_skip(self, involved_dag, generation_order):
+        for node in reversed(generation_order):
+            node_attr = involved_dag.node[node]
+            handler = self._handlers[node_attr['handler']]
+            can_skip_node = True
+            for _, target, edge_attr in involved_dag.out_edges_iter(node,
+                                                                    data=True):
+                if (target != 'generate'
+                        and involved_dag.node[target]['skipped']):
+                    edge_attr['skipped_keys'] = edge_attr['keys']
+                    edge_attr['keys'] = []
+                else:
+                    required_keys = edge_attr['keys']
+                    edge_attr['skipped_keys'] = []
+                    edge_attr['keys'] = []
+                    for required_key in required_keys:
+                        if handler.can_skip(required_key):
+                            edge_attr['skipped_keys'].append(required_key)
+                        else:
+                            edge_attr['keys'].append(required_key)
+                    if len(edge_attr['keys']) > 0:
+                        can_skip_node = False
+            node_attr['skipped'] = True if can_skip_node else False
+
     def generate(self, data_keys):
         if isinstance(data_keys, str):
             data_keys = (data_keys,)
@@ -177,15 +207,18 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
         node_keys_dict = self._dag.get_node_keys_dict(data_keys)
         involved_dag = self._dag.get_subgraph_with_ancestors(
             six.viewkeys(node_keys_dict))
-        generation_order = nx.topological_sort(involved_dag)
         edges = []
         for source_node, data_keys in six.viewitems(node_keys_dict):
             edges.append((source_node, 'generate', {'keys': data_keys}))
         involved_dag.add_edges_from(edges)
+        generation_order = nx.topological_sort(involved_dag)[:-1]
+        self.dag_prune_can_skip(involved_dag, generation_order)
 
         # generate data
         for node in generation_order:
             node_attr = involved_dag.node[node]
+            if node_attr['skipped']:
+                continue
             mode = node_attr['mode']
             if mode == 'full':
                 self._generate_one(
