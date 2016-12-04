@@ -61,10 +61,10 @@ class DataDAG(object):
 
 class FeatureGeneratorType(type):
 
-    def __new__(mcs, clsname, bases, dct):
+    def __init__(cls, name, bases, attrs):
         # pylint: disable=protected-access
-        cls = super(FeatureGeneratorType, mcs).__new__(
-            mcs, clsname, bases, dct)
+        super(FeatureGeneratorType, cls).__init__(name, bases, attrs)
+
         attrs = inspect.getmembers(
             cls, lambda a: hasattr(a, '_feagen_will_generate'))
 
@@ -79,7 +79,6 @@ class FeatureGeneratorType(type):
                 del function._feagen_require
         dag.add_edges_from(requirements)
         cls._dag = dag
-        return cls
 
 
 class FeatureGenerator(six.with_metaclass(FeatureGeneratorType, object)):
