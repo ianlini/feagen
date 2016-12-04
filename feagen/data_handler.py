@@ -21,8 +21,8 @@ class HDF5DataHandler(DataHandler):
     def data_type(self):
         return 'hdf5_data'
 
-    def can_skip(self, new_data_keys):
-        new_data_key_set = set(map(lambda s: "/" + s, new_data_keys))
+    def can_skip(self, new_data_key_set):
+        new_data_key_set = set(map(lambda s: "/" + s, new_data_key_set))
         generated_set = set(self.h5f.keys())
         if new_data_key_set <= generated_set:
             return True
@@ -36,8 +36,7 @@ class MemoryIntermediateDataHandler(DataHandler):
     def data_type(self):
         return 'memory_intermediate_data'
 
-    def can_skip(self, new_data_keys):
-        new_data_key_set = set(new_data_keys)
+    def can_skip(self, new_data_key_set):
         generated_set = set(six.viewkeys(self.data))
         if new_data_key_set <= generated_set:
             return True

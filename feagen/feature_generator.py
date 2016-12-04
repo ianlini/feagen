@@ -39,7 +39,7 @@ class DataDAG(object):
                     key, self._data_key_node_dict[key], function_name))
             self._data_key_node_dict[key] = function_name
 
-        self._nx_dag.add_node(function_name, config, function=function)
+        self._nx_dag.add_node(function_name, config)
 
     def get_node_keys_dict(self, data_keys):
         node_keys_dict = defaultdict(list)
@@ -121,6 +121,11 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
                                      lacked_handlers_set))
         self._handlers = handlers
 
+    def _generate_one(self, dag, node, handler_key, will_generate_key_set):
+        handler = self._handlers[handler_key]
+        function = getattr(self, node)
+        print(handler.can_skip(will_generate_key_set))
+
     def generate(self, data_keys):
         if isinstance(data_keys, str):
             data_keys = (data_keys,)
@@ -134,6 +139,22 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
         for source_node, data_keys in six.viewitems(node_keys_dict):
             edges.append((source_node, 'generate', {'keys': data_keys}))
         involved_dag.add_edges_from(edges)
+
+        # generate data
+        for node in generation_order:
+            node_attr = involved_dag.node[node]
+            will_generate_key_set = set()
+            for _, _, attr in involved_dag.out_edges_iter(node, data=True):
+                will_generate_key_set |= set(attr['keys'])
+            if node_attr['mode'] == 'full':
+                self._generate_one(
+                    involved_dag, node, node_attr['handler'],
+                    will_generate_key_set)
+            elif node_attr['mode'] == 'one':
+                for data_key in will_generate_key_set:
+                    self._generate_one(
+                        involved_dag, node, node_attr['handler'],
+                        set([data_key]))
         import ipdb; ipdb.set_trace()
 
         return involved_dag
