@@ -24,6 +24,7 @@ def draw_dag(nx_dag, path):
     for node in agraph.nodes_iter():
         if node.attr['skipped'] == "True":
             node.attr['label'] = str(node) + " (skipped)"
+            node.attr['fontcolor'] = 'grey'
     agraph.layout('dot')
     agraph.draw(path)
 
