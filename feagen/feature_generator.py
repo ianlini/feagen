@@ -4,6 +4,7 @@ from collections import defaultdict
 
 import six
 import networkx as nx
+from bistiming import SimpleTimer
 
 from .data_handler import (
     MemoryIntermediateDataHandler,
@@ -106,6 +107,17 @@ class FeatureGeneratorType(type):
         cls._handler_set = handler_set
 
 
+def _run_function(function, handler_key, will_generate_keys, kwargs):
+    with SimpleTimer("Generating {} {} using {}"
+                     .format(handler_key, will_generate_keys,
+                             function.__name__),
+                     end_in_new_line=False):  # pylint: disable=C0330
+        result_dict = function(**kwargs)
+    if result_dict is None:
+        result_dict = {}
+    return result_dict
+
+
 class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
 
     def __init__(self, handlers):
@@ -125,13 +137,21 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
             data.update(source_handler.get(attr['keys']))
         return data
 
-    def _generate_one(self, dag, node, handler_key, will_generate_key_set,
+
+    def _generate_one(self, dag, node, handler_key, will_generate_keys,
                       handler_kwargs):
         handler = self._handlers[handler_key]
-        if handler.can_skip(will_generate_key_set):
+        if handler.can_skip(will_generate_keys):
             return
         data = self._get_upstream_data(dag, node)
+        function_kwargs = handler.get_function_kwargs(
+            will_generate_keys=will_generate_keys,
+            data=data,
+            **handler_kwargs,
+        )
         function = getattr(self, node)
+        result_dict = _run_function(function, handler_key, will_generate_keys,
+                                    function_kwargs)
 
         import ipdb; ipdb.set_trace()
 
@@ -152,18 +172,18 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
         # generate data
         for node in generation_order:
             node_attr = involved_dag.node[node]
-            will_generate_key_set = set()
-            for _, _, attr in involved_dag.out_edges_iter(node, data=True):
-                will_generate_key_set |= set(attr['keys'])
             if node_attr['mode'] == 'full':
                 self._generate_one(
                     involved_dag, node, node_attr['handler'],
-                    will_generate_key_set, node_attr['handler_kwargs'])
+                    node_attr['keys'], node_attr['handler_kwargs'])
             elif node_attr['mode'] == 'one':
+                will_generate_key_set = set()
+                for _, _, attr in involved_dag.out_edges_iter(node, data=True):
+                    will_generate_key_set |= set(attr['keys'])
                 for data_key in will_generate_key_set:
                     self._generate_one(
                         involved_dag, node, node_attr['handler'],
-                        set([data_key]), node_attr['handler_kwargs'])
+                        (data_key,), node_attr['handler_kwargs'])
         import ipdb; ipdb.set_trace()
 
         return involved_dag
