@@ -8,6 +8,11 @@ from mkdir_p import mkdir_p
 import six
 import networkx as nx
 
+from .data_handler import (
+    MemoryIntermediateDataHandler,
+    HDF5DataHandler,
+)
+
 
 def draw_dag(nx_dag, path):
     agraph = nx.nx_agraph.to_agraph(nx_dag)
@@ -91,31 +96,40 @@ class FeatureGeneratorType(type):
         dag = DataDAG()
         # build DAG
         requirements = []
+        handler_set = set()
         for function_name, function in attrs:
             dag.add_node(function_name, function)
+            handler_set.add(function._feagen_will_generate['handler'])
             del function._feagen_will_generate
             if hasattr(function, '_feagen_require'):
                 requirements.append((function_name, function._feagen_require))
                 del function._feagen_require
         dag.add_edges_from(requirements)
         cls._dag = dag
+        cls._handler_set = handler_set
 
 
-class FeatureGenerator(six.with_metaclass(FeatureGeneratorType, object)):
+class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
 
-    def __init__(self, global_feature_hdf_path):
-        self.intermediate_data = {}
-        global_feature_hdf_dir = os.path.dirname(global_feature_hdf_path)
-        if global_feature_hdf_dir != '':
-            mkdir_p(global_feature_hdf_dir)
-        self.global_feature_h5f = h5py.File(global_feature_hdf_path, 'a')
+    def __init__(self, handlers):
+        handler_set = set(six.viewkeys(handlers))
+        if handler_set != self._handler_set:
+            redundant_handlers_set = handler_set - self._handler_set
+            lacked_handlers_set = self._handler_set - handler_set
+            raise ValueError('Handler set mismatch. {} redundant and {} lacked.'
+                             .format(redundant_handlers_set,
+                                     lacked_handlers_set))
+        self._handlers = handlers
 
     def generate(self, data_keys):
         if isinstance(data_keys, str):
             data_keys = (data_keys,)
+
+        # get the nodes ad edges that should be considered during the generation
         node_keys_dict = self._dag.get_node_keys_dict(data_keys)
         involved_dag = self._dag.get_subgraph_with_ancestors(
             six.viewkeys(node_keys_dict))
+        generation_order = nx.topological_sort(involved_dag)
         edges = []
         for source_node, data_keys in six.viewitems(node_keys_dict):
             edges.append((source_node, 'generate', {'keys': data_keys}))
@@ -127,3 +141,21 @@ class FeatureGenerator(six.with_metaclass(FeatureGeneratorType, object)):
     @classmethod
     def draw_dag(cls, path):
         cls._dag.draw(path)  # pylint: disable=protected-access
+
+
+class FeatureGenerator(DataGenerator):
+
+    def __init__(self, global_feature_hdf_path=None, handlers=None):
+        if handlers is None:
+            handlers = {}
+        if ('intermediate_data' in self._handler_set
+                and 'intermediate_data' not in handlers):
+            handlers['intermediate_data'] = MemoryIntermediateDataHandler()
+        if ('features' in self._handler_set
+                and 'features' not in handlers):
+            if global_feature_hdf_path is None:
+                raise ValueError("global_feature_hdf_path should be specified "
+                                 "when initiating FeatureGenerator.")
+            handlers['features'] = HDF5DataHandler(global_feature_hdf_path)
+        super(FeatureGenerator, self).__init__(handlers)
+

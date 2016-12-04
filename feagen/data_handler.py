@@ -1,25 +1,44 @@
+import os.path
+
+import six
+import h5py
+from mkdir_p import mkdir_p
+
+
 class DataHandler(object):
     @property
     def data_type(self):
         return self.__class__.__name__
 
-class HDF5FeatureHandler(DataHandler):
+class HDF5DataHandler(DataHandler):
+    def __init__(self, hdf_path):
+        hdf_dir = os.path.dirname(hdf_path)
+        if hdf_dir != '':
+            mkdir_p(hdf_dir)
+        self.h5f = h5py.File(hdf_path, 'a')
+
     @property
     def data_type(self):
-        return 'hdf5_feature'
+        return 'hdf5_data'
+
+    def can_skip(self, new_data_keys):
+        new_data_key_set = set(map(lambda s: "/" + s, new_data_keys))
+        generated_set = set(self.h5f.keys())
+        if new_data_key_set <= generated_set:
+            return True
+        return False
 
 class MemoryIntermediateDataHandler(DataHandler):
+    def __init__(self):
+        self.data = {}
+
     @property
     def data_type(self):
         return 'memory_intermediate_data'
 
-HANDLER_ALIASES = {
-    'features': HDF5FeatureHandler,
-    'intermediate_data': MemoryIntermediateDataHandler,
-}
-
-def get_data_handler(handler):
-    if isinstance(handler, str):
-        return HANDLER_ALIASES[handler]()
-    else:
-        return handler
+    def can_skip(self, new_data_keys):
+        new_data_key_set = set(new_data_keys)
+        generated_set = set(six.viewkeys(self.data))
+        if new_data_key_set <= generated_set:
+            return True
+        return False

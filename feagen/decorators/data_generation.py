@@ -4,8 +4,6 @@ import six
 import numpy as np
 from bistiming import SimpleTimer
 
-from ..data_handler import get_data_handler
-
 
 # def require_intermediate_data(data_keys):
 #     if isinstance(data_keys, str):
@@ -126,7 +124,6 @@ def will_generate(data_handler, will_generate_keys,
     if isinstance(will_generate_keys, str):
         will_generate_keys = (will_generate_keys,)
     # will_generate_key_set = set(will_generate_keys)
-    data_handler = get_data_handler(data_handler)
 
     def will_generate_decorator(func):
         # pylint: disable=protected-access
@@ -163,7 +160,6 @@ def will_generate_one_of(data_handler, will_generate_keys,
                          manually_create_dataset=False):
     if isinstance(will_generate_keys, str):
         will_generate_keys = (will_generate_keys,)
-    data_handler = get_data_handler(data_handler)
 
     def will_generate_one_of_decorator(func):
         # pylint: disable=protected-access
