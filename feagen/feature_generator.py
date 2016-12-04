@@ -12,12 +12,21 @@ class DataDAG(object):
     # TODO: This is not really a DAG
 
     def __init__(self):
-        self._data_node_dict = {}
+        self._data_key_node_dict = {}
         self._dag = nx.DiGraph()
 
-    def add(self, key, value, upstream=None):  # pylint: disable=unused-argument
-        # TODO: set DAG
-        self._data_node_dict[key] = value
+    def add_node(self, function_name, function):
+        # pylint: disable=protected-access
+        config = function._feagen_will_generate
+        del function._feagen_will_generate
+
+        for key in config['keys']:
+            if key in self._data_key_node_dict:
+                raise ValueError("duplicated data key '{}' in {} and {}".format(
+                    key, self._data_key_node_dict[key], function_name))
+            self._data_key_node_dict[key] = function_name
+
+        self._dag.add_node(function_name, config, function=function)
 
     def __getitem__(self, key):
         found_node = None
@@ -49,23 +58,14 @@ class FeatureGeneratorType(type):
         attrs = inspect.getmembers(
             cls, lambda a: hasattr(a, '_feagen_will_generate'))
 
-        dag_dict = {
-            'features': RegexDAG(),
-            'intermediate_data': RegexDAG(),
-        }
-
-        # register the data key
+        dag = DataDAG()
+        # build DAG
         for attr_key, attr_val in attrs:
-            set_name = attr_val._feagen_data_type
-            dag = dag_dict[set_name]
-            for key in attr_val._feagen_will_generate_keys:
-                if key in dag:
-                    raise ValueError("duplicated {} '{}' in {} and {}".format(
-                        set_name, key, dag._data_node_dict[key], attr_key))
-                dag.add(key, attr_key)
-
-        cls._feature_dag = dag_dict['features']
-        cls._intermediate_data_dag = dag_dict['intermediate_data']
+            dag.add_node(attr_key, attr_val)
+        import pprint
+        pprint.pprint(dag._dag.nodes(data=True), indent=1, width=80, depth=None)
+        import ipdb
+        ipdb.set_trace()
 
         return cls
 

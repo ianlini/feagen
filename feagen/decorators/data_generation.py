@@ -27,7 +27,7 @@ def require(data_keys):
 
     def require_decorator(func):
         # pylint: disable=protected-access
-        if hasattr(func, '_feagen_require'):
+        if not hasattr(func, '_feagen_require'):
             func._feagen_require = []
         func._feagen_require.append(data_keys)
         # @wraps(func)

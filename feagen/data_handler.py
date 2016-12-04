@@ -1,15 +1,21 @@
 class DataHandler(object):
-    pass
+    @property
+    def data_type(self):
+        return self.__class__.__name__
 
-class FeaturesHandler(DataHandler):
-    pass
+class HDF5FeatureHandler(DataHandler):
+    @property
+    def data_type(self):
+        return 'hdf5_feature'
 
-class IntermediateDataHandler(DataHandler):
-    pass
+class MemoryIntermediateDataHandler(DataHandler):
+    @property
+    def data_type(self):
+        return 'memory_intermediate_data'
 
 HANDLER_ALIASES = {
-    'features': FeaturesHandler,
-    'intermediate_data': IntermediateDataHandler,
+    'features': HDF5FeatureHandler,
+    'intermediate_data': MemoryIntermediateDataHandler,
 }
 
 def get_data_handler(handler):
