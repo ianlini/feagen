@@ -138,8 +138,11 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
         return data
 
 
-    def _generate_one(self, dag, node, handler_key, will_generate_keys,
+    def _generate_one(self, dag, node, handler_key, will_generate_keys, mode,
                       handler_kwargs):
+        if mode == 'one':
+            will_generate_key = will_generate_keys
+            will_generate_keys = (will_generate_key,)
         handler = self._handlers[handler_key]
         if handler.can_skip(will_generate_keys):
             return
@@ -149,6 +152,8 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
             data=data,
             **handler_kwargs,
         )
+        if mode == 'one':
+            function_kwargs['will_generate_key'] = will_generate_key
         function = getattr(self, node)
         result_dict = _run_function(function, handler_key, will_generate_keys,
                                     function_kwargs)
@@ -172,18 +177,21 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
         # generate data
         for node in generation_order:
             node_attr = involved_dag.node[node]
-            if node_attr['mode'] == 'full':
+            mode = node_attr['mode']
+            if mode == 'full':
                 self._generate_one(
                     involved_dag, node, node_attr['handler'],
-                    node_attr['keys'], node_attr['handler_kwargs'])
-            elif node_attr['mode'] == 'one':
+                    node_attr['keys'], mode, node_attr['handler_kwargs'])
+            elif mode == 'one':
                 will_generate_key_set = set()
                 for _, _, attr in involved_dag.out_edges_iter(node, data=True):
                     will_generate_key_set |= set(attr['keys'])
                 for data_key in will_generate_key_set:
                     self._generate_one(
                         involved_dag, node, node_attr['handler'],
-                        (data_key,), node_attr['handler_kwargs'])
+                        data_key, mode, node_attr['handler_kwargs'])
+            else:
+                raise ValueError("Mode '%s' is not supported." % mode)
         import ipdb; ipdb.set_trace()
 
         return involved_dag
