@@ -3,6 +3,7 @@ mkdir-p
 h5py
 bistiming
 numpy
+networkx
 
 # for testing
 pylint

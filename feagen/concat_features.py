@@ -61,8 +61,7 @@ def save_concat_features(feature_list, global_feature_hdf_path,
                          buffer_size=int(1e+9)):
     with h5py.File(global_feature_hdf_path, 'r') as global_feature_h5f, \
             h5py.File(concat_feature_hdf_path, 'w') as concat_feature_h5f, \
-            SimpleTimer("Concatenating and saving features",
-                        end_in_new_line=False):
+            SimpleTimer("Concatenating and saving features"):
 
         if extra_data is not None:
             # save extra data
