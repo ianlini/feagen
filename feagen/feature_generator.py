@@ -13,12 +13,11 @@ class DataDAG(object):
 
     def __init__(self):
         self._data_key_node_dict = {}
-        self._dag = nx.DiGraph()
+        self._nx_dag = nx.DiGraph()
 
     def add_node(self, function_name, function):
         # pylint: disable=protected-access
         config = function._feagen_will_generate
-        del function._feagen_will_generate
 
         for key in config['keys']:
             if key in self._data_key_node_dict:
@@ -26,7 +25,18 @@ class DataDAG(object):
                     key, self._data_key_node_dict[key], function_name))
             self._data_key_node_dict[key] = function_name
 
-        self._dag.add_node(function_name, config, function=function)
+        self._nx_dag.add_node(function_name, config, function=function)
+
+
+    def add_edges_from(self, requirements):
+        edges = []
+        for function_name, function_requirements in requirements:
+            for requirement in function_requirements:
+                edges.append((self._data_key_node_dict[requirement],
+                              function_name))
+        self._nx_dag.add_edges_from(edges)
+        if not nx.is_directed_acyclic_graph(self._nx_dag):
+            raise ValueError("The dependency graph has cycle.")
 
     def __getitem__(self, key):
         found_node = None
@@ -60,13 +70,15 @@ class FeatureGeneratorType(type):
 
         dag = DataDAG()
         # build DAG
-        for attr_key, attr_val in attrs:
-            dag.add_node(attr_key, attr_val)
-        import pprint
-        pprint.pprint(dag._dag.nodes(data=True), indent=1, width=80, depth=None)
-        import ipdb
-        ipdb.set_trace()
-
+        requirements = []
+        for function_name, function in attrs:
+            dag.add_node(function_name, function)
+            del function._feagen_will_generate
+            if hasattr(function, '_feagen_require'):
+                requirements.append((function_name, function._feagen_require))
+                del function._feagen_require
+        dag.add_edges_from(requirements)
+        cls._dag = dag
         return cls
 
 
@@ -87,3 +99,10 @@ class FeatureGenerator(six.with_metaclass(FeatureGeneratorType, object)):
     def require(self, keys, dag):
         for key in keys:
             getattr(self, dag[key])(key)
+
+    @classmethod
+    def draw_dag(cls, path):
+        # pylint: disable=protected-access
+        agraph = nx.nx_agraph.to_agraph(cls._dag._nx_dag)
+        agraph.layout('dot')
+        agraph.draw(path)

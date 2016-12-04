@@ -29,7 +29,7 @@ def require(data_keys):
         # pylint: disable=protected-access
         if not hasattr(func, '_feagen_require'):
             func._feagen_require = []
-        func._feagen_require.append(data_keys)
+        func._feagen_require.extend(data_keys)
         # @wraps(func)
         # def func_wrapper(self, set_name, new_data_key):
         #     self.require(data_keys, self._intermediate_data_dag)  # pylint: disable=protected-access
