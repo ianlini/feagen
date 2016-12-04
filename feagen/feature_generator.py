@@ -9,6 +9,14 @@ import six
 import networkx as nx
 
 
+def draw_dag(nx_dag, path):
+    agraph = nx.nx_agraph.to_agraph(nx_dag)
+    for edge in agraph.edges_iter():
+        edge.attr['label'] = edge.attr['keys']
+    agraph.layout('dot')
+    agraph.draw(path)
+
+
 class DataDAG(object):
     # TODO: This is not really a DAG
 
@@ -62,11 +70,13 @@ class DataDAG(object):
         return found_node
 
     def draw(self, path):
-        agraph = nx.nx_agraph.to_agraph(self._nx_dag)
-        for edge in agraph.edges_iter():
-            edge.attr['label'] = edge.attr['keys']
-        agraph.layout('dot')
-        agraph.draw(path)
+        draw_dag(self._nx_dag, path)
+
+    def get_subgraph_with_ancestors(self, nodes):
+        subgraph_nodes = set(nodes)
+        for node in nodes:
+            subgraph_nodes |= nx.ancestors(self._nx_dag, node)
+        return self._nx_dag.subgraph(subgraph_nodes)
 
 
 class FeatureGeneratorType(type):
@@ -104,8 +114,15 @@ class FeatureGenerator(six.with_metaclass(FeatureGeneratorType, object)):
         if isinstance(data_keys, str):
             data_keys = (data_keys,)
         node_keys_dict = self._dag.get_node_keys_dict(data_keys)
-        import ipdb
-        ipdb.set_trace()
+        involved_dag = self._dag.get_subgraph_with_ancestors(
+            six.viewkeys(node_keys_dict))
+        edges = []
+        for source_node, data_keys in six.viewitems(node_keys_dict):
+            edges.append((source_node, 'generate', {'keys': data_keys}))
+        involved_dag.add_edges_from(edges)
+        import ipdb; ipdb.set_trace()
+
+        return involved_dag
 
     @classmethod
     def draw_dag(cls, path):
