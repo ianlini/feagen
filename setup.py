@@ -24,10 +24,18 @@ else:
     ]
     tests_require = []
 
-description = ("A fast and memory-efficient Python feature generating "
-               "framework for machine learning.")
-long_description = ("See `github <https://github.com/ianlini/feagen>`_ "
-                    "for more information.")
+
+description = """\
+A fast and memory-efficient Python feature generating framework for \
+machine learning."""
+
+long_description = """\
+Please visit  the `GitHub repository <https://github.com/ianlini/feagen>`_
+for more information.\n
+"""
+with open('README.rst') as fp:
+    long_description += fp.read()
+
 
 setup(
     name='feagen',
