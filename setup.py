@@ -48,6 +48,11 @@ setup(
     install_requires=install_requires,
     tests_require=tests_require,
     license="BSD 2-Clause License",
+    entry_points={
+        'console_scripts': [
+            'feagen = feagen.tools:feagen_run',
+        ],
+    },
     classifiers=[
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
