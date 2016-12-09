@@ -6,6 +6,22 @@ import six
 from bistiming import IterTimer, SimpleTimer
 
 
+def flatten_structure(structure):
+    structure = structure.copy()
+    data_keys = structure.pop('features')
+    def _flatten_structure(structure, data_keys):
+        for _, val in six.viewitems(structure):
+            if isinstance(val, str):
+                data_keys.append(val)
+            elif isinstance(val, list):
+                data_keys.extend(val)
+            else:
+                _flatten_structure(val, data_keys)
+        return data_keys
+    return _flatten_structure(structure, data_keys)
+
+
+
 def fill_concat_features(feature_list, global_feature_h5f, concat_feature_h5f,
                          buffer_size=int(1e+9)):
     feature_shapes = []
