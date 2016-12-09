@@ -21,6 +21,7 @@ else:
         'bistiming>=0.1.1',
         'numpy',
         'networkx',
+        'pyyaml',
     ]
     tests_require = []
 
@@ -51,6 +52,7 @@ setup(
     entry_points={
         'console_scripts': [
             'feagen = feagen.tools:feagen_run',
+            'feagen-init = feagen.tools:init_config',
         ],
     },
     classifiers=[
