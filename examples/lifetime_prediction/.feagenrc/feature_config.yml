@@ -1,0 +1,30 @@
+# The name of this feature set. This will be the file name of the concatenated
+# data. Another suggested usage is to comment out this line, so the name will be
+# obtained from the file name of this config, that is, the name will be the same
+# as the config file name without the extension.
+name: default
+
+# The structure of the concatenated data. All the involved data will be
+# generated and put into the global feature file first (if not exist),
+# and then be composed according to this structure and then write to the
+# concatenated feature file.
+# Only 'features' in the structure dictionary is required and be treated
+# differently. The value for the key 'features' can only be list of strings, and
+# the features specified in this list will be concatenated to one dataset.
+structure:
+  label:
+    label
+  test_filter_list:
+  - is_in_test_set
+  features:
+  - weight
+  - height
+  - BMI
+  - weight_divided_by_height
+
+# The additional arguments that will be given when initiating the feature
+# generator object.
+generator_args: []
+generator_kwargs:
+  data_csv_path:
+    lifetime.csv

@@ -1,0 +1,3 @@
+generator_class: lifetime_feature_generator.LifetimeFeatureGenerator
+concat_feature_dir: concat_features
+global_feature_hdf_path: global_feature.h5
