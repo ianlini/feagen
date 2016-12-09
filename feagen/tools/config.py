@@ -5,10 +5,14 @@ from mkdir_p import mkdir_p
 
 def init_config():
     mkdir_p(".feagenrc")
-    default_path_config = """\
+    default_global_config = """\
 generator_class: feature_generator.FeatureGenerator
 concat_feature_dir: concat_features
 global_feature_hdf_path: global_feature.h5
+
+# The additional arguments that will be given when initiating the feature
+# generator object.
+generator_kwargs: {}
 """
     default_feature_config = """\
 # The name of this feature set. This will be the file name of the concatenated
@@ -32,17 +36,17 @@ structure:
   - feature_2
 
 # The additional arguments that will be given when initiating the feature
-# generator object.
-generator_args: []
+# generator object. If the same key appears in both global config and feature
+# config, the value in the feature config will be used.
 generator_kwargs: {}
 """
-    default_path_config_path = join(".feagenrc", "path_config.yml")
-    if exists(default_path_config_path):
+    default_global_config_path = join(".feagenrc", "config.yml")
+    if exists(default_global_config_path):
         print("Warning: %s exists so it's not generated."
-              % default_path_config_path)
+              % default_global_config_path)
     else:
-        with open(default_path_config_path, "w") as fp:
-            fp.write(default_path_config)
+        with open(default_global_config_path, "w") as fp:
+            fp.write(default_global_config)
 
     default_feature_config_path = join(".feagenrc", "feature_config.yml")
     if exists(default_feature_config_path):

@@ -25,4 +25,5 @@ def feagen_run(argv=sys.argv[1:]):
         feature_config = yaml.load(fp)
     filename_without_extension = splitext(basename(args.feature_config))[0]
     feature_config.setdefault('name', filename_without_extension)
+    # TODO: check the config
     feagen_run_with_configs(path_config, feature_config)

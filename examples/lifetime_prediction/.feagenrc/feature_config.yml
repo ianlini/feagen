@@ -23,8 +23,6 @@ structure:
   - weight_divided_by_height
 
 # The additional arguments that will be given when initiating the feature
-# generator object.
-generator_args: []
-generator_kwargs:
-  data_csv_path:
-    lifetime.csv
+# generator object. If the same key appears in both global config and feature
+# config, the value in the feature config will be used.
+generator_kwargs: {}
