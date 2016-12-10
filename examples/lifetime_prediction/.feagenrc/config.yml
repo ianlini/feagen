@@ -2,8 +2,8 @@ generator_class: lifetime_feature_generator.LifetimeFeatureGenerator
 data_bundles_dir: data_bundles
 global_data_hdf_path: global_data.h5
 
-# The additional arguments that will be given when initiating the feature
-# generator object.
+# The additional arguments that will be given when initiating the data generator
+# object.
 generator_kwargs:
   data_csv_path:
     lifetime.csv
