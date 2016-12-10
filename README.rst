@@ -90,3 +90,12 @@ For example, in `examples/lifetime_prediction/`_, if you run ``feagen`` first an
 .. image:: /examples/lifetime_prediction/fig/involved_dag.png
 
 (Note that the order may not be the same)
+
+After the subDAG is generated, the program will start running the methods you implemented in the generator class in an appropriate order, and then output to the global data.
+The global data will not be removed and can be reused.
+If you want to generate another bundle, the data that has been generated will not be generated again.
+This saves much time!
+
+Finally, the data bundle is generated according to the ``structure`` specified in the bundle config. You can use `hdfview <https://support.hdfgroup.org/products/java/hdfview/>`_ to check the resulting global data and data bundle. It may help you understand what the output is.
+
+Now, you can use the data bundle to do machine learning!
