@@ -10,10 +10,11 @@ def draw_full_dag(argv=sys.argv[1:]):
         description="Generate DAG.")
     parser.add_argument('-g', '--global-config',
                         default=".feagenrc/config.yml",
-                        help="the path of the path configuration YAML file")
+                        help="the path of the path configuration YAML file "
+                             "(default: .feagenrc/config.yml)")
     parser.add_argument('-d', '--dag-output-path',
                         default="dag.png",
-                        help="output picture path")
+                        help="output image path (default: dag.png)")
     args = parser.parse_args(argv)
     with open(args.global_config) as fp:
         global_config = yaml.load(fp)
