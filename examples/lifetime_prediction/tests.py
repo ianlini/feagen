@@ -1,29 +1,44 @@
 import os
-from tempfile import NamedTemporaryFile
+from os.path import dirname, abspath, join
+from tempfile import NamedTemporaryFile, mkdtemp
+from shutil import rmtree
 
 import h5py
-
-from .generate_lifetime_features import generate_lifetime_features
+import yaml
+from feagen.tools.feagen_runner import feagen_run_with_configs
+from feagen.bundling import flatten_structure
 
 
 def test_generate_lifetime_features():
-    with NamedTemporaryFile(suffix=".h5", delete=False) as fp:
-        global_feature_hdf_path = fp.name
-    with NamedTemporaryFile(suffix=".h5", delete=False) as fp:
-        concat_feature_hdf_path = fp.name
-    generate_lifetime_features(global_feature_hdf_path, concat_feature_hdf_path)
+    config_dir = join(dirname(abspath(__file__)), '.feagenrc')
+    with open(join(config_dir, 'config.yml')) as fp:
+        global_config = yaml.load(fp)
+    with open(join(config_dir, 'bundle_config.yml')) as fp:
+        bundle_config = yaml.load(fp)
 
-    with h5py.File(global_feature_hdf_path, "r") as global_feature_h5f, \
-            h5py.File(concat_feature_hdf_path, "r") as concat_feature_h5f:
-        feature_set = {'weight', 'height', 'BMI', 'weight_divided_by_height'}
-        label_set = {'label'}
-        test_filter_set = {'is_in_test_set'}
-        assert (set(global_feature_h5f)
-                == feature_set | label_set | test_filter_set)
-        assert (set(concat_feature_h5f)
-                == {'feature', 'test_filter_list', 'label'})
-        assert set(concat_feature_h5f['label']) == label_set
-        assert set(concat_feature_h5f['test_filter_list']) == test_filter_set
+    with NamedTemporaryFile(suffix=".h5", delete=False) as fp:
+        global_data_hdf_path = fp.name
+    data_bundles_dir = mkdtemp()
+    data_bundle_hdf_path = join(data_bundles_dir, 'default.h5')
 
-    os.remove(global_feature_hdf_path)
-    os.remove(concat_feature_hdf_path)
+    global_config['global_data_hdf_path'] = global_data_hdf_path
+    global_config['data_bundles_dir'] = data_bundles_dir
+    global_config['generator_class'] = ("examples.lifetime_prediction."
+                                        + global_config['generator_class'])
+    csv_path = global_config['generator_kwargs']['data_csv_path']
+    global_config['generator_kwargs']['data_csv_path'] = join(
+        "examples", "lifetime_prediction", csv_path)
+
+    feagen_run_with_configs(global_config, bundle_config)
+
+    with h5py.File(global_data_hdf_path, "r") as global_data_h5f, \
+            h5py.File(data_bundle_hdf_path, "r") as data_bundle_h5f:
+        assert (set(global_data_h5f)
+                == set(flatten_structure(bundle_config['structure'])))
+        assert (set(data_bundle_h5f)
+                == {'features', 'test_filters', 'label'})
+        assert set(data_bundle_h5f['test_filters']) == {'is_in_test_set'}
+        assert data_bundle_h5f['features'].shape == (6, 4)
+
+    os.remove(global_data_hdf_path)
+    rmtree(data_bundles_dir)

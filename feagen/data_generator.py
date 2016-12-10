@@ -210,7 +210,8 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
             six.viewkeys(node_keys_dict))
         edges = []
         for source_node, data_keys in six.viewitems(node_keys_dict):
-            edges.append((source_node, 'generate', {'keys': data_keys}))
+            edges.append((source_node, 'generate',
+                          {'keys': list(set(data_keys))}))
         involved_dag.add_edges_from(edges)
         generation_order = nx.topological_sort(involved_dag)[:-1]
         self.dag_prune_can_skip(involved_dag, generation_order)

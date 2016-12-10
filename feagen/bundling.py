@@ -8,7 +8,7 @@ from bistiming import IterTimer, SimpleTimer
 
 def flatten_structure(structure):
     structure = structure.copy()
-    data_keys = structure.pop('features')
+    data_keys = structure.pop('features')[:]
     def _flatten_structure(structure, data_keys):
         for _, val in six.viewitems(structure):
             if isinstance(val, str):
@@ -44,11 +44,11 @@ def fill_concat_features(feature_list, global_data_h5f, data_bundle_h5f,
     n_features = sum(shape[1] for shape in feature_shapes)
     concat_shape = (n_instances, n_features)
 
-    data_bundle_h5f.create_dataset('feature', shape=concat_shape,
+    data_bundle_h5f.create_dataset('features', shape=concat_shape,
                                    dtype=np.float32)
 
     feature_d = 0
-    dset = data_bundle_h5f['feature']
+    dset = data_bundle_h5f['features']
     for feature_i, (feature_name, feature_shape) in enumerate(
             zip(feature_list, feature_shapes)):
         batch_size = (buffer_size
