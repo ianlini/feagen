@@ -245,7 +245,7 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
 
 class FeatureGenerator(DataGenerator):
 
-    def __init__(self, global_feature_hdf_path=None, handlers=None):
+    def __init__(self, global_data_hdf_path=None, handlers=None):
         if handlers is None:
             handlers = {}
         if ('intermediate_data' in self._handler_set
@@ -253,9 +253,9 @@ class FeatureGenerator(DataGenerator):
             handlers['intermediate_data'] = MemoryIntermediateDataHandler()
         if ('features' in self._handler_set
                 and 'features' not in handlers):
-            if global_feature_hdf_path is None:
-                raise ValueError("global_feature_hdf_path should be specified "
+            if global_data_hdf_path is None:
+                raise ValueError("global_data_hdf_path should be specified "
                                  "when initiating FeatureGenerator.")
-            handlers['features'] = HDF5DataHandler(global_feature_hdf_path)
+            handlers['features'] = HDF5DataHandler(global_data_hdf_path)
         super(FeatureGenerator, self).__init__(handlers)
 

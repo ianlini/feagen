@@ -1,6 +1,6 @@
 generator_class: lifetime_feature_generator.LifetimeFeatureGenerator
-concat_feature_dir: concat_features
-global_feature_hdf_path: global_feature.h5
+data_bundles_dir: data_bundles
+global_data_hdf_path: global_data.h5
 
 # The additional arguments that will be given when initiating the feature
 # generator object.

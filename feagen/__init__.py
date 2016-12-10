@@ -1,6 +1,6 @@
 import pkg_resources
 from .data_generator import FeatureGenerator
-from .concat_features import save_concat_features
+from .bundling import bundle_data
 
-__all__ = ['feature_generator', 'decorators', 'concat_features']
+__all__ = ['feature_generator', 'decorators', 'bundling']
 __version__ = pkg_resources.get_distribution("feagen").version
