@@ -21,7 +21,8 @@ Installation
 
 Getting start
 -------------
-Getting start from the simple `lifetime prediction example </examples/lifetime_prediction>`_ is an easy way. You can first look at the raw data `lifetime.csv </examples/lifetime_prediction/lifetime.csv>`_ and then you may better understand what we are doing to the data.
+Getting start from the simple `lifetime prediction example </examples/lifetime_prediction/>`_ is an easy way.
+You can first look at the raw data `lifetime.csv </examples/lifetime_prediction/lifetime.csv>`_ and then you may better understand what we are doing to the data.
 
 Creating the feature generator
 ******************************
@@ -53,8 +54,39 @@ You can use the command line tool ``feagen-draw-dag`` to draw the DAG image:
                            output image path (default: dag.png)
 
 You can specify the paths of the global config and the output image using ``-g`` and ``-d`` respectively.
-Running ``feagen-draw-dag`` in ``examples/lifetime_prediction`` will give you `examples/lifetime_prediction/dag.png </examples/lifetime_prediction/dag.png>`_:
+Running ``feagen-draw-dag -d fig/dag.png`` in `examples/lifetime_prediction/ </examples/lifetime_prediction/>`_ will give you `examples/lifetime_prediction/fig/dag.png </examples/lifetime_prediction/fig/dag.png>`_:
 
-.. image:: /examples/lifetime_prediction/dag.png
+.. image:: /examples/lifetime_prediction/fig/dag.png
+
+(Note that the order may not be the same)
+
+Generating features
+*******************
+After the generator class and the config are defined, we can now generate the features.
+A command line tool ``feagen`` can be used now:
+
+   usage: feagen [-h] [-g GLOBAL_CONFIG] [-b BUNDLE_CONFIG] [-d DAG_OUTPUT_PATH]
+
+   Generate global data and data bundle.
+
+   optional arguments:
+     -h, --help            show this help message and exit
+     -g GLOBAL_CONFIG, --global-config GLOBAL_CONFIG
+                           the path of the path configuration YAML file (default:
+                           .feagenrc/config.yml)
+     -b BUNDLE_CONFIG, --bundle-config BUNDLE_CONFIG
+                           the path of the bundle configuration YAML file
+                           (default: .feagenrc/bundle_config.yml)
+     -d DAG_OUTPUT_PATH, --dag-output-path DAG_OUTPUT_PATH
+                           draw the involved subDAG to the provided path
+                           (default: None)
+
+You can specify the paths of the global config, the bundle config, and the involved subDAG image using ``-g``, ``-b`` and ``-d`` respectively.
+
+The program will first find the nodes in the DAG that are involved and build a subDAG for this task, and check whether the data has been generated in the global data.
+The resulting DAG after these checks will be output if you specify ``-d``.
+For example, in `examples/lifetime_prediction/`_, if you run ``feagen`` first and then add a new feature ``height_divided_by_weight``, and run ``feagen -d fig/involved_dag.png``, you will get an image `examples/lifetime_prediction/fig/involved_dag.png </examples/lifetime_prediction/fig/involved_dag.png>`_:
+
+.. image:: /examples/lifetime_prediction/fig/involved_dag.png
 
 (Note that the order may not be the same)

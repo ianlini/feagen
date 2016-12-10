@@ -40,12 +40,15 @@ def feagen_run(argv=sys.argv[1:]):
         description="Generate global data and data bundle.")
     parser.add_argument('-g', '--global-config',
                         default=".feagenrc/config.yml",
-                        help="the path of the path configuration YAML file")
+                        help="the path of the path configuration YAML file "
+                             "(default: .feagenrc/config.yml)")
     parser.add_argument('-b', '--bundle-config',
                         default=".feagenrc/bundle_config.yml",
-                        help="the path of the bundle configuration YAML file")
+                        help="the path of the bundle configuration YAML file "
+                             "(default: .feagenrc/bundle_config.yml)")
     parser.add_argument('-d', '--dag-output-path', default=None,
-                        help="draw the involved subDAG to the provided path")
+                        help="draw the involved subDAG to the provided path "
+                             "(default: None)")
     args = parser.parse_args(argv)
     with open(args.global_config) as fp:
         global_config = yaml.load(fp)

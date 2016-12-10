@@ -1,3 +1,4 @@
+from os.path import dirname
 import inspect
 import re
 from collections import defaultdict
@@ -5,6 +6,7 @@ from collections import defaultdict
 import six
 import networkx as nx
 from bistiming import SimpleTimer
+from mkdir_p import mkdir_p
 
 from .data_handler import (
     MemoryIntermediateDataHandler,
@@ -13,6 +15,7 @@ from .data_handler import (
 
 
 def draw_dag(nx_dag, path):
+    mkdir_p(dirname(path))
     agraph = nx.nx_agraph.to_agraph(nx_dag)
     for edge in agraph.edges_iter():
         edge.attr['label'] = edge.attr['keys']
