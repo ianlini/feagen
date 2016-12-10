@@ -1,6 +1,6 @@
 import os
 from os.path import dirname, abspath, join
-from tempfile import NamedTemporaryFile, mkdtemp
+from tempfile import mkstemp, mkdtemp
 from shutil import rmtree
 
 import h5py
@@ -16,8 +16,7 @@ def test_generate_lifetime_features():
     with open(join(config_dir, 'bundle_config.yml')) as fp:
         bundle_config = yaml.load(fp)
 
-    with NamedTemporaryFile(suffix=".h5", delete=False) as fp:
-        global_data_hdf_path = fp.name
+    global_data_hdf_path = mkstemp(suffix=".h5")[1]
     data_bundles_dir = mkdtemp()
     data_bundle_hdf_path = join(data_bundles_dir, 'default.h5')
 
