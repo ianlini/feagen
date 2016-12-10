@@ -1,3 +1,4 @@
+from os.path import dirname
 import inspect
 import re
 from collections import defaultdict
@@ -5,6 +6,7 @@ from collections import defaultdict
 import six
 import networkx as nx
 from bistiming import SimpleTimer
+from mkdir_p import mkdir_p
 
 from .data_handler import (
     MemoryIntermediateDataHandler,
@@ -13,6 +15,7 @@ from .data_handler import (
 
 
 def draw_dag(nx_dag, path):
+    mkdir_p(dirname(path))
     agraph = nx.nx_agraph.to_agraph(nx_dag)
     for edge in agraph.edges_iter():
         edge.attr['label'] = edge.attr['keys']
@@ -210,7 +213,8 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
             six.viewkeys(node_keys_dict))
         edges = []
         for source_node, data_keys in six.viewitems(node_keys_dict):
-            edges.append((source_node, 'generate', {'keys': data_keys}))
+            edges.append((source_node, 'generate',
+                          {'keys': list(set(data_keys))}))
         involved_dag.add_edges_from(edges)
         generation_order = nx.topological_sort(involved_dag)[:-1]
         self.dag_prune_can_skip(involved_dag, generation_order)
@@ -245,7 +249,7 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
 
 class FeatureGenerator(DataGenerator):
 
-    def __init__(self, global_feature_hdf_path=None, handlers=None):
+    def __init__(self, global_data_hdf_path=None, handlers=None):
         if handlers is None:
             handlers = {}
         if ('intermediate_data' in self._handler_set
@@ -253,9 +257,9 @@ class FeatureGenerator(DataGenerator):
             handlers['intermediate_data'] = MemoryIntermediateDataHandler()
         if ('features' in self._handler_set
                 and 'features' not in handlers):
-            if global_feature_hdf_path is None:
-                raise ValueError("global_feature_hdf_path should be specified "
+            if global_data_hdf_path is None:
+                raise ValueError("global_data_hdf_path should be specified "
                                  "when initiating FeatureGenerator.")
-            handlers['features'] = HDF5DataHandler(global_feature_hdf_path)
+            handlers['features'] = HDF5DataHandler(global_data_hdf_path)
         super(FeatureGenerator, self).__init__(handlers)
 

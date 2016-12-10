@@ -4,6 +4,7 @@ h5py
 bistiming
 numpy
 networkx
+pyyaml
 
 # for testing
 pylint

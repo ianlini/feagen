@@ -21,6 +21,7 @@ else:
         'bistiming>=0.1.1',
         'numpy',
         'networkx',
+        'pyyaml',
     ]
     tests_require = []
 
@@ -48,6 +49,13 @@ setup(
     install_requires=install_requires,
     tests_require=tests_require,
     license="BSD 2-Clause License",
+    entry_points={
+        'console_scripts': [
+            'feagen = feagen.tools:feagen_run',
+            'feagen-init = feagen.tools:init_config',
+            'feagen-draw-dag = feagen.tools:draw_full_dag',
+        ],
+    },
     classifiers=[
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
