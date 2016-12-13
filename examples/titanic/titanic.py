@@ -126,7 +126,7 @@ def load_feature_run_model(concat_feature_hdf_path, prediction_csv_path):
 
     df = pd.DataFrame(prediction, columns=['Survived'],
                       index=passenger_id[test_filter])
-    df.index.name = 'PassengerId'
+    df.index.rename('PassengerId')
     df.to_csv(prediction_csv_path)
 
 def main():
