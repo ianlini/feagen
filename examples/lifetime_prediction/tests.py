@@ -20,13 +20,14 @@ def test_generate_lifetime_features():
     data_bundles_dir = mkdtemp()
     data_bundle_hdf_path = join(data_bundles_dir, 'default.h5')
 
-    global_config['global_data_hdf_path'] = global_data_hdf_path
     global_config['data_bundles_dir'] = data_bundles_dir
     global_config['generator_class'] = ("examples.lifetime_prediction."
                                         + global_config['generator_class'])
     csv_path = global_config['generator_kwargs']['data_csv_path']
     global_config['generator_kwargs']['data_csv_path'] = join(
         "examples", "lifetime_prediction", csv_path)
+    global_config['generator_kwargs']['global_data_hdf_path'] = \
+        global_data_hdf_path
 
     feagen_run_with_configs(global_config, bundle_config)
 

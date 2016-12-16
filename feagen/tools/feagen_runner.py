@@ -17,9 +17,7 @@ def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None):
     generator_class = getattr(module, class_name)
     generator_kwargs = global_config['generator_kwargs']
     generator_kwargs.update(bundle_config['generator_kwargs'])
-    data_generator = generator_class(
-        global_data_hdf_path=global_config['global_data_hdf_path'],
-        **generator_kwargs)
+    data_generator = generator_class(**generator_kwargs)
 
     data_keys = flatten_structure(bundle_config['structure'])
     involved_dag = data_generator.generate(data_keys)
@@ -30,7 +28,7 @@ def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None):
     bundle_path = join(global_config['data_bundles_dir'],
                        bundle_config['name'] + '.h5')
     bundle_data(bundle_config['structure'],
-                global_data_hdf_path=global_config['global_data_hdf_path'],
+                global_data_hdf_path=generator_kwargs['global_data_hdf_path'],
                 data_bundle_hdf_path=bundle_path)
 
 
