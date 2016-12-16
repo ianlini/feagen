@@ -6,10 +6,21 @@ This example uses the `Titanic competition <https://www.kaggle.com/c/titanic>`_
 from Kaggle to demonstrate how to utilize *feagen* to organized your feature for
 each submission.
 
-You may run the example with following steps:
+Data Download
+=============
 
-1. Go down to path feagen/examples/titanic and download the dataset (train.csv,
-   test.csv) from https://www.kaggle.com/c/titanic/data to the directory data.
+Go down to path feagen/examples/titanic and download the dataset (train.csv,
+test.csv) from https://www.kaggle.com/c/titanic/data to the directory data.
+
+
+Configuration File
+##################
+
+.. code-block:: bash
+   feagen-init
+
+
+
 
 2. Run gen_feature.py and it will generate two files data/data.h5
    data/concat_feature.h5.  data.h5 contains all features that are extracted
