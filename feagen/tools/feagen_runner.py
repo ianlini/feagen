@@ -12,11 +12,25 @@ from ..bundling import flatten_structure, bundle_data
 
 def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None):
     # TODO: check the config
+    """Generate feature with configurations.
+
+    global_config (dict): global configuration
+        generator_class: string
+        generator_kwargs: dict
+
+    bundle_config (dict): bundle configuration
+        name: string
+        structure: dict
+    """
+    if not isinstance(global_config, dict):
+        raise ValueError("global_config should be a dictionary")
+    if not isinstance(bundle_config, dict):
+        raise ValueError("global_config should be a dictionary")
+
     module_name, class_name = global_config['generator_class'].rsplit(".", 1)
     module = import_module(module_name)
     generator_class = getattr(module, class_name)
     generator_kwargs = global_config['generator_kwargs']
-    generator_kwargs.update(bundle_config['generator_kwargs'])
     data_generator = generator_class(**generator_kwargs)
 
     data_keys = flatten_structure(bundle_config['structure'])
