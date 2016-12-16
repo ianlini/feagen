@@ -2,6 +2,7 @@ from os.path import basename, splitext, join
 import sys
 import argparse
 from importlib import import_module
+import collections
 
 import yaml
 from mkdir_p import mkdir_p
@@ -14,18 +15,19 @@ def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None):
     # TODO: check the config
     """Generate feature with configurations.
 
-    global_config (dict): global configuration
+    global_config (collections.Mapping): global configuration
         generator_class: string
-        generator_kwargs: dict
+        data_bundles_dir: string
+        generator_kwargs: collections.Mapping
 
-    bundle_config (dict): bundle configuration
+    bundle_config (collections.Mapping): bundle configuration
         name: string
-        structure: dict
+        structure: collections.Mapping
     """
-    if not isinstance(global_config, dict):
-        raise ValueError("global_config should be a dictionary")
-    if not isinstance(bundle_config, dict):
-        raise ValueError("global_config should be a dictionary")
+    if not isinstance(global_config, collections.Mapping):
+        raise ValueError("global_config should be a collections.Mapping object.")
+    if not isinstance(bundle_config, collections.Mapping):
+        raise ValueError("bundle_config should be a collections.Mapping object.")
 
     module_name, class_name = global_config['generator_class'].rsplit(".", 1)
     module = import_module(module_name)
