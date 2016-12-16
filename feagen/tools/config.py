@@ -8,11 +8,12 @@ def init_config():
     default_global_config = """\
 generator_class: feature_generator.FeatureGenerator
 data_bundles_dir: data_bundles
-global_data_hdf_path: global_data.h5
 
 # The additional arguments that will be given when initiating the data generator
 # object.
-generator_kwargs: {}
+generator_kwargs:
+  global_data_hdf_path:
+    global_data.h5
 """
     default_bundle_config = """\
 # The name of this bundle. This will be the file name of the data bundle.
@@ -33,11 +34,6 @@ structure:
   features:
   - feature_1
   - feature_2
-
-# The additional arguments that will be given when initiating the data generator
-# object. If the same key appears in both global config and bundle config, the
-# value in the bundle config will be used.
-generator_kwargs: {}
 """
     default_global_config_path = join(".feagenrc", "config.yml")
     if exists(default_global_config_path):

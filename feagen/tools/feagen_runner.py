@@ -2,6 +2,7 @@ from os.path import basename, splitext, join
 import sys
 import argparse
 from importlib import import_module
+import collections
 
 import yaml
 from mkdir_p import mkdir_p
@@ -12,14 +13,27 @@ from ..bundling import flatten_structure, bundle_data
 
 def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None):
     # TODO: check the config
+    """Generate feature with configurations.
+
+    global_config (collections.Mapping): global configuration
+        generator_class: string
+        data_bundles_dir: string
+        generator_kwargs: collections.Mapping
+
+    bundle_config (collections.Mapping): bundle configuration
+        name: string
+        structure: collections.Mapping
+    """
+    if not isinstance(global_config, collections.Mapping):
+        raise ValueError("global_config should be a collections.Mapping object.")
+    if not isinstance(bundle_config, collections.Mapping):
+        raise ValueError("bundle_config should be a collections.Mapping object.")
+
     module_name, class_name = global_config['generator_class'].rsplit(".", 1)
     module = import_module(module_name)
     generator_class = getattr(module, class_name)
     generator_kwargs = global_config['generator_kwargs']
-    generator_kwargs.update(bundle_config['generator_kwargs'])
-    data_generator = generator_class(
-        global_data_hdf_path=global_config['global_data_hdf_path'],
-        **generator_kwargs)
+    data_generator = generator_class(**generator_kwargs)
 
     data_keys = flatten_structure(bundle_config['structure'])
     involved_dag = data_generator.generate(data_keys)
@@ -30,7 +44,7 @@ def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None):
     bundle_path = join(global_config['data_bundles_dir'],
                        bundle_config['name'] + '.h5')
     bundle_data(bundle_config['structure'],
-                global_data_hdf_path=global_config['global_data_hdf_path'],
+                global_data_hdf_path=generator_kwargs['global_data_hdf_path'],
                 data_bundle_hdf_path=bundle_path)
 
 

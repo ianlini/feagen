@@ -20,8 +20,3 @@ structure:
   - height
   - BMI
   - weight_divided_by_height
-
-# The additional arguments that will be given when initiating the data generator
-# object. If the same key appears in both global config and bundle config, the
-# value in the bundle config will be used.
-generator_kwargs: {}
