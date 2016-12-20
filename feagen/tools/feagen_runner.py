@@ -47,7 +47,8 @@ def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None):
                        bundle_config['name'] + '.h5')
     bundle_data(bundle_config['structure'],
                 global_data_hdf_path=generator_kwargs['global_data_hdf_path'],
-                data_bundle_hdf_path=bundle_path)
+                data_bundle_hdf_path=bundle_path,
+                structure_config=bundle_config['structure_config'])
 
 
 def feagen_run(argv=sys.argv[1:]):

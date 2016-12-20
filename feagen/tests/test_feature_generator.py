@@ -35,6 +35,11 @@ def test_generate_lifetime_features():
                 'weight_divided_by_height',
             ],
         },
+        'structure_config': {
+            'features': {
+                'concat': True,
+            }
+        }
     }
 
     feagen_run_with_configs(global_config, bundle_config)

@@ -20,3 +20,7 @@ structure:
   - height
   - BMI
   - weight_divided_by_height
+
+structure_config:
+  features:
+    concat: True
