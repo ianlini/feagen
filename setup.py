@@ -16,6 +16,7 @@ else:
     ]
     install_requires = [
         'six',
+        'future',
         'mkdir-p',
         'h5py',
         'bistiming>=0.1.1',

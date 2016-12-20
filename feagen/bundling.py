@@ -1,4 +1,5 @@
 import gc
+from past.builtins import basestring
 
 import numpy as np
 import h5py
@@ -11,7 +12,7 @@ def flatten_structure(structure):
     data_keys = structure.pop('features')[:]
     def _flatten_structure(structure, data_keys):
         for _, val in six.viewitems(structure):
-            if isinstance(val, str):
+            if isinstance(val, basestring):
                 data_keys.append(val)
             elif isinstance(val, list):
                 data_keys.extend(val)
@@ -81,7 +82,7 @@ def bundle_data(structure, global_data_hdf_path, data_bundle_hdf_path,
 
     def _bundle_data(structure, group, global_data_h5f):
         for key, val in six.viewitems(structure):
-            if isinstance(val, str):
+            if isinstance(val, basestring):
                 group.create_dataset(key, data=global_data_h5f[val])
             elif isinstance(val, list):
                 new_group = group.create_group(key)

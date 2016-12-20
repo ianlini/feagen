@@ -1,5 +1,8 @@
+from past.builtins import basestring
+
+
 def require(data_keys):
-    if isinstance(data_keys, str):
+    if isinstance(data_keys, basestring):
         data_keys = (data_keys,)
 
     def require_decorator(func):
@@ -12,9 +15,8 @@ def require(data_keys):
 
 
 def will_generate(data_handler, will_generate_keys, **handler_kwargs):
-    if isinstance(will_generate_keys, str):
+    if isinstance(will_generate_keys, basestring):
         will_generate_keys = (will_generate_keys,)
-    # will_generate_key_set = set(will_generate_keys)
 
     def will_generate_decorator(func):
         # pylint: disable=protected-access
@@ -32,7 +34,7 @@ def will_generate(data_handler, will_generate_keys, **handler_kwargs):
 
 
 def will_generate_one_of(data_handler, will_generate_keys, **handler_kwargs):
-    if isinstance(will_generate_keys, str):
+    if isinstance(will_generate_keys, basestring):
         will_generate_keys = (will_generate_keys,)
 
     def will_generate_one_of_decorator(func):

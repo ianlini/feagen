@@ -1,5 +1,6 @@
 import os.path
 from functools import partial
+from past.builtins import basestring
 
 import six
 import h5py
@@ -46,7 +47,7 @@ class HDF5DataHandler(DataHandler):
         return False
 
     def get(self, keys):
-        if isinstance(keys, str):
+        if isinstance(keys, basestring):
             keys = (keys,)
         return {key: self.h5f[key] for key in keys}
 
@@ -100,7 +101,7 @@ class MemoryIntermediateDataHandler(DataHandler):
         return False
 
     def get(self, keys):
-        if isinstance(keys, str):
+        if isinstance(keys, basestring):
             keys = (keys,)
         return {key: self.data[key] for key in keys}
 

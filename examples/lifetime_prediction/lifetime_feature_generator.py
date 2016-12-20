@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import feagen as fg

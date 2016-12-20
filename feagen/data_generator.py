@@ -1,4 +1,5 @@
 import inspect
+from past.builtins import basestring
 
 import six
 import networkx as nx
@@ -121,7 +122,7 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
             node_attr['skipped'] = True if can_skip_node else False
 
     def generate(self, data_keys):
-        if isinstance(data_keys, str):
+        if isinstance(data_keys, basestring):
             data_keys = (data_keys,)
 
         # get the nodes ad edges that should be considered during the generation

@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from io import StringIO
 
 import pandas as pd
