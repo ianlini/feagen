@@ -1,97 +1,14 @@
-from os.path import dirname
 import inspect
-import re
-from collections import defaultdict
 
 import six
 import networkx as nx
 from bistiming import SimpleTimer
-from mkdir_p import mkdir_p
 
+from .dag import DataDAG
 from .data_handler import (
     MemoryIntermediateDataHandler,
     HDF5DataHandler,
 )
-
-
-def draw_dag(nx_dag, path):
-    mkdir_p(dirname(path))
-    agraph = nx.nx_agraph.to_agraph(nx_dag)
-    for edge in agraph.edges_iter():
-        edge.attr['label'] = edge.attr['keys']
-        if edge.attr['keys'] == "[]":
-            edge.attr['label'] = ""
-        if (edge.attr['skipped_keys'] != "[]"
-                and edge.attr['skipped_keys'] is not None):
-            edge.attr['label'] += "(%s skipped)" % edge.attr['skipped_keys']
-    for node in agraph.nodes_iter():
-        if node.attr['skipped'] == "True":
-            node.attr['label'] = str(node) + " (skipped)"
-            node.attr['fontcolor'] = 'grey'
-    agraph.layout('dot')
-    agraph.draw(path)
-
-
-class DataDAG(object):
-    # TODO: This is not really a DAG
-
-    def __init__(self):
-        self._data_key_node_dict = {}
-        self._nx_dag = nx.DiGraph()
-
-    def add_node(self, function_name, function):
-        # pylint: disable=protected-access
-        config = function._feagen_will_generate
-
-        for key in config['keys']:
-            if key in self._data_key_node_dict:
-                raise ValueError("duplicated data key '{}' in {} and {}".format(
-                    key, self._data_key_node_dict[key], function_name))
-            self._data_key_node_dict[key] = function_name
-
-        self._nx_dag.add_node(function_name, config)
-
-    def get_node_keys_dict(self, data_keys):
-        node_keys_dict = defaultdict(list)
-        for data_key in data_keys:
-            node_keys_dict[self[data_key]].append(data_key)
-        return node_keys_dict
-
-    def add_edges_from(self, requirements):
-        edges = []
-        for function_name, function_requirements in requirements:
-            node_keys_dict = self.get_node_keys_dict(function_requirements)
-            for source_node, data_keys in six.viewitems(node_keys_dict):
-                edges.append((source_node, function_name, {'keys': data_keys}))
-        self._nx_dag.add_edges_from(edges)
-        if not nx.is_directed_acyclic_graph(self._nx_dag):
-            raise ValueError("The dependency graph has cycle.")
-
-    def __getitem__(self, key):
-        found_node = None
-        found_key = None
-        for regex_key, node in six.viewitems(self._data_key_node_dict):
-            if re.match("(%s)$" % regex_key, key) is not None:
-                if found_node is None:
-                    found_node = node
-                    found_key = regex_key
-                else:
-                    raise ValueError("The data key '{}' matches multiple keys: "
-                                     "'{}' in {} and '{}' in {}.".format(
-                                         key, found_key, found_node,
-                                         regex_key, node))
-        if found_node is None:
-            raise KeyError(key)
-        return found_node
-
-    def draw(self, path):
-        draw_dag(self._nx_dag, path)
-
-    def get_subgraph_with_ancestors(self, nodes):
-        subgraph_nodes = set(nodes)
-        for node in nodes:
-            subgraph_nodes |= nx.ancestors(self._nx_dag, node)
-        return self._nx_dag.subgraph(subgraph_nodes)
 
 
 class FeatureGeneratorType(type):
@@ -130,7 +47,7 @@ def _run_function(function, handler_key, will_generate_keys, kwargs):
     return result_dict
 
 
-def check_result_dict_type(result_dict, function_name):
+def _check_result_dict_type(result_dict, function_name):
     if not (hasattr(result_dict, 'keys')
             and hasattr(result_dict, '__getitem__')):
         raise ValueError("the return value of mehod {} should have "
@@ -174,7 +91,7 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
         function = getattr(self, node)
         result_dict = _run_function(function, handler_key, will_generate_keys,
                                     function_kwargs)
-        check_result_dict_type(result_dict, node)
+        _check_result_dict_type(result_dict, node)
         handler.check_result_dict_keys(result_dict, will_generate_keys, node,
                                        handler_key, **handler_kwargs)
         handler.write_data(result_dict)

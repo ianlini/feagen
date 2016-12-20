@@ -6,7 +6,7 @@ import collections
 
 import yaml
 from mkdir_p import mkdir_p
-from feagen.data_generator import draw_dag
+from feagen.dag import draw_dag
 
 from ..bundling import flatten_structure, bundle_data
 
@@ -25,9 +25,11 @@ def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None):
         structure: collections.Mapping
     """
     if not isinstance(global_config, collections.Mapping):
-        raise ValueError("global_config should be a collections.Mapping object.")
+        raise ValueError("global_config should be a "
+                         "collections.Mapping object.")
     if not isinstance(bundle_config, collections.Mapping):
-        raise ValueError("bundle_config should be a collections.Mapping object.")
+        raise ValueError("bundle_config should be a "
+                         "collections.Mapping object.")
 
     module_name, class_name = global_config['generator_class'].rsplit(".", 1)
     module = import_module(module_name)
