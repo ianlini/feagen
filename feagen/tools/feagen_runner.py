@@ -39,6 +39,7 @@ def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None):
 
     data_keys = flatten_structure(bundle_config['structure'])
     involved_dag = data_generator.generate(data_keys)
+
     if dag_output_path is not None:
         draw_dag(involved_dag, dag_output_path)
 

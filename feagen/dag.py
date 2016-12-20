@@ -77,6 +77,11 @@ class DataDAG(object):
             raise KeyError(key)
         return found_node
 
+    def get_node_attr(self, key):
+        node = self[key]
+        node_attr = self._nx_dag.node[node]
+        return node_attr
+
     def draw(self, path):
         draw_dag(self._nx_dag, path)
 

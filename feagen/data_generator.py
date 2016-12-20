@@ -67,13 +67,18 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
                                      lacked_handlers_set))
         self._handlers = handlers
 
+    def get(self, key):
+        node_attr = self._dag.get_node_attr(key)
+        handler = self._handlers[node_attr['handler']]
+        data = handler.get(key)[key]
+        return data
+
     def _get_upstream_data(self, dag, node):
         data = {}
         for source, _, attr in dag.in_edges_iter(node, data=True):
             source_handler = self._handlers[dag.node[source]['handler']]
             data.update(source_handler.get(attr['keys']))
         return data
-
 
     def _generate_one(self, dag, node, handler_key, will_generate_keys, mode,
                       handler_kwargs):
@@ -97,7 +102,7 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
                                        handler_key, **handler_kwargs)
         handler.write_data(result_dict)
 
-    def dag_prune_can_skip(self, involved_dag, generation_order):
+    def _dag_prune_can_skip(self, involved_dag, generation_order):
         for node in reversed(generation_order):
             node_attr = involved_dag.node[node]
             handler = self._handlers[node_attr['handler']]
@@ -135,7 +140,7 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
                           {'keys': list(set(data_keys))}))
         involved_dag.add_edges_from(edges)
         generation_order = nx.topological_sort(involved_dag)[:-1]
-        self.dag_prune_can_skip(involved_dag, generation_order)
+        self._dag_prune_can_skip(involved_dag, generation_order)
 
         # generate data
         for node in generation_order:
