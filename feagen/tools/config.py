@@ -25,15 +25,19 @@ name: default
 # The structure of the data bundle. All the involved data will be generated and
 # put into the global data file first (if data not exist), and then be bundled
 # according to this structure, and then write to the data bundle file.
-# Only 'features' in the structure dictionary is required and be treated
-# differently. The value for the key 'features' can only be list of strings, and
-# the features specified in this list will be concatenated to one dataset.
 structure:
   id: id
   label: label
   features:
   - feature_1
   - feature_2
+
+# Special configuration for the structure. Here we set concat=True for
+# 'features'. It means that the data list in 'features' will be concatenated
+# into a dataset.
+structure_config:
+  features:
+    concat: True
 """
     default_global_config_path = join(".feagenrc", "config.yml")
     if exists(default_global_config_path):
