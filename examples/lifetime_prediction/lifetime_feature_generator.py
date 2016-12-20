@@ -16,31 +16,31 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
         super(LifetimeFeatureGenerator, self).__init__(global_data_hdf_path)
         self.data_csv_path = data_csv_path
 
-    @will_generate('intermediate_data', 'data_df')
+    @will_generate('memory', 'data_df')
     def gen_data_df(self):
         return {'data_df': pd.read_csv(self.data_csv_path, index_col='id')}
 
     @require('data_df')
-    @will_generate('features', 'label')
+    @will_generate('h5py', 'label')
     def gen_label(self, data):
         data_df = data['data_df']
         return {'label': data_df['lifetime']}
 
     @require('data_df')
-    @will_generate('features', ['weight', 'height'])
+    @will_generate('h5py', ['weight', 'height'])
     def gen_raw_data_features(self, data):
         data_df = data['data_df']
         return data_df[['weight', 'height']]
 
     @require('data_df')
-    @will_generate('features', 'BMI')
+    @will_generate('h5py', 'BMI')
     def gen_bmi(self, data):
         data_df = data['data_df']
         bmi = data_df['weight'] / ((data_df['height'] / 100) ** 2)
         return {'BMI': bmi}
 
     @require('data_df')
-    @will_generate_one_of('features', r'\w+_divided_by_\w+')
+    @will_generate_one_of('h5py', r'\w+_divided_by_\w+')
     def gen_divided_by(self, will_generate_key, data):
         import re
         data_df = data['data_df']
@@ -51,7 +51,7 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
         return {will_generate_key: division_result}
 
     @require('data_df')
-    @will_generate('features', 'is_in_test_set')
+    @will_generate('h5py', 'is_in_test_set')
     def gen_is_in_test_set(self, data):
         data_df = data['data_df']
         _, test_id = train_test_split(

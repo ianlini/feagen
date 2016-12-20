@@ -6,9 +6,9 @@ import networkx as nx
 from bistiming import SimpleTimer
 
 from .dag import DataDAG
-from .data_handler import (
-    MemoryIntermediateDataHandler,
-    HDF5DataHandler,
+from .data_handlers import (
+    MemoryDataHandler,
+    H5pyDataHandler,
 )
 
 
@@ -170,14 +170,14 @@ class FeatureGenerator(DataGenerator):
     def __init__(self, global_data_hdf_path=None, handlers=None):
         if handlers is None:
             handlers = {}
-        if ('intermediate_data' in self._handler_set
-                and 'intermediate_data' not in handlers):
-            handlers['intermediate_data'] = MemoryIntermediateDataHandler()
-        if ('features' in self._handler_set
-                and 'features' not in handlers):
+        if ('memory' in self._handler_set
+                and 'memory' not in handlers):
+            handlers['memory'] = MemoryDataHandler()
+        if ('h5py' in self._handler_set
+                and 'h5py' not in handlers):
             if global_data_hdf_path is None:
                 raise ValueError("global_data_hdf_path should be specified "
                                  "when initiating FeatureGenerator.")
-            handlers['features'] = HDF5DataHandler(global_data_hdf_path)
+            handlers['h5py'] = H5pyDataHandler(global_data_hdf_path)
         super(FeatureGenerator, self).__init__(handlers)
 

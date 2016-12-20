@@ -33,7 +33,7 @@ def check_exact_match_keys(result_dict_key_set, will_generate_key_set,
                              will_generate_key_set, handler_key))
 
 
-class HDF5DataHandler(DataHandler):
+class H5pyDataHandler(DataHandler):
 
     def __init__(self, hdf_path):
         hdf_dir = os.path.dirname(hdf_path)
@@ -90,7 +90,7 @@ class HDF5DataHandler(DataHandler):
                     self.h5f.create_dataset(key, data=result)
 
 
-class MemoryIntermediateDataHandler(DataHandler):
+class MemoryDataHandler(DataHandler):
 
     def __init__(self):
         self.data = {}
