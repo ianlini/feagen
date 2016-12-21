@@ -7,6 +7,7 @@ import six
 import h5py
 from mkdir_p import mkdir_p
 import numpy as np
+import pandas as pd
 from bistiming import SimpleTimer
 
 
@@ -66,7 +67,7 @@ class H5pyDataHandler(DataHandler):
         self.h5f = h5py.File(hdf_path, 'a')
 
     def can_skip(self, data_key):
-        if "/" + data_key in self.h5f.keys():
+        if data_key in self.h5f:
             return True
         return False
 
@@ -104,8 +105,8 @@ class H5pyDataHandler(DataHandler):
     def write_data(self, result_dict):
         for key, result in six.iteritems(result_dict):
             if np.isnan(result).any():
-                raise ValueError("features {} have nan".format(key))
-            with SimpleTimer("Writing generated features {} to hdf5 file"
+                raise ValueError("data {} have nan".format(key))
+            with SimpleTimer("Writing generated data {} to hdf5 file"
                              .format(key),
                              end_in_new_line=False):
                 if key in self.h5f:
@@ -113,6 +114,45 @@ class H5pyDataHandler(DataHandler):
                 else:
                     self.h5f.create_dataset(key, data=result)
         self.h5f.flush()
+
+
+class PandasHDFDataHandler(DataHandler):
+
+    def __init__(self, hdf_path):
+        hdf_dir = os.path.dirname(hdf_path)
+        if hdf_dir != '':
+            mkdir_p(hdf_dir)
+        self.hdf_store = pd.HDFStore(hdf_path)
+
+    def can_skip(self, data_key):
+        if data_key in self.hdf_store:
+            return True
+        return False
+
+    def get(self, keys):
+        if isinstance(keys, basestring):
+            keys = (keys,)
+        return {key: self.hdf_store[key] for key in keys}
+
+    def write_data(self, result_dict):
+        for key, result in six.iteritems(result_dict):
+            is_null = False
+            if isinstance(result, pd.DataFrame):
+                if result.isnull().any().any():
+                    is_null = True
+            elif isinstance(result, pd.Series):
+                if result.isnull().any():
+                    is_null = True
+            else:
+                raise ValueError("PandasHDFDataHandler doesn't support type "
+                                 "{} (in key {})".format(type(result), key))
+            if is_null:
+                raise ValueError("data {} have nan".format(key))
+            with SimpleTimer("Writing generated data {} to hdf5 file"
+                             .format(key),
+                             end_in_new_line=False):
+                self.hdf_store[key] = result
+        self.hdf_store.flush(fsync=True)
 
 
 class MemoryDataHandler(DataHandler):

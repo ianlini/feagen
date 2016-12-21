@@ -9,6 +9,7 @@ from feagen.tools.feagen_runner import feagen_run_with_configs
 
 def test_generate_lifetime_features():
     global_data_hdf_path = mkstemp(suffix=".h5")[1]
+    global_table_hdf_path = mkstemp(suffix=".h5")[1]
     data_bundles_dir = mkdtemp()
 
     global_config = {
@@ -17,6 +18,7 @@ def test_generate_lifetime_features():
         'data_bundles_dir': data_bundles_dir,
         'generator_kwargs': {
             'global_data_hdf_path': global_data_hdf_path,
+            'global_table_hdf_path': global_table_hdf_path,
         },
     }
 
@@ -28,13 +30,23 @@ def test_generate_lifetime_features():
                 'is_in_test_set',
             ],
             'test_dict': {
-                'comparison': ['weight', 'height', 'mem_raw_data'],
+                'comparison': [
+                    'weight',
+                    'height',
+                    'mem_raw_data',
+                    'pd_weight',
+                    'pd_height',
+                    'pd_raw_data',
+                ],
             },
             'features': [
                 'weight',
                 'height',
                 'mem_raw_data',
                 'man_raw_data',
+                'pd_weight',
+                'pd_height',
+                'pd_raw_data',
                 'BMI',
                 'weight_divided_by_height',
             ],
@@ -53,7 +65,8 @@ def test_generate_lifetime_features():
         assert set(data_bundle_h5f) == {'features', 'test_filters', 'label',
                                         'test_dict'}
         assert set(data_bundle_h5f['test_filters']) == {'is_in_test_set'}
-        assert data_bundle_h5f['features'].shape == (6, 8)
+        assert data_bundle_h5f['features'].shape == (6, 12)
 
     os.remove(global_data_hdf_path)
+    os.remove(global_table_hdf_path)
     rmtree(data_bundles_dir)
