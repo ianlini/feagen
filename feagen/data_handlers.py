@@ -1,16 +1,13 @@
 import os.path
 from functools import partial
-from past.builtins import basestring
+from abc import ABCMeta, abstractmethod
 
+from past.builtins import basestring
 import six
 import h5py
 from mkdir_p import mkdir_p
 import numpy as np
 from bistiming import SimpleTimer
-
-
-class DataHandler(object):
-    pass
 
 
 def check_redundant_keys(result_dict_key_set, will_generate_key_set,
@@ -31,6 +28,33 @@ def check_exact_match_keys(result_dict_key_set, will_generate_key_set,
                          "match {} while generating {}.".format(
                              function_name, result_dict_key_set,
                              will_generate_key_set, handler_key))
+
+
+class DataHandler(six.with_metaclass(ABCMeta, object)):
+    @abstractmethod
+    def can_skip(self, data_key):
+        pass
+
+    @abstractmethod
+    def get(self, keys):
+        pass
+
+    def get_function_kwargs(self, will_generate_keys, data):  # pylint: disable=unused-argument
+        kwargs = {}
+        if len(data) > 0:
+            kwargs['data'] = data
+        return kwargs
+
+    def check_result_dict_keys(self, result_dict, will_generate_keys,
+                               function_name, handler_key):
+        will_generate_key_set = set(will_generate_keys)
+        result_dict_key_set = set(result_dict.keys())
+        check_exact_match_keys(result_dict_key_set, will_generate_key_set,
+                               function_name, handler_key)
+
+    @abstractmethod
+    def write_data(self, result_dict):
+        pass
 
 
 class H5pyDataHandler(DataHandler):
@@ -105,19 +129,6 @@ class MemoryDataHandler(DataHandler):
         if isinstance(keys, basestring):
             keys = (keys,)
         return {key: self.data[key] for key in keys}
-
-    def get_function_kwargs(self, will_generate_keys, data):  # pylint: disable=unused-argument
-        kwargs = {}
-        if len(data) > 0:
-            kwargs['data'] = data
-        return kwargs
-
-    def check_result_dict_keys(self, result_dict, will_generate_keys,
-                               function_name, handler_key):
-        will_generate_key_set = set(will_generate_keys)
-        result_dict_key_set = set(result_dict.keys())
-        check_exact_match_keys(result_dict_key_set, will_generate_key_set,
-                               function_name, handler_key)
 
     def write_data(self, result_dict):
         self.data.update(result_dict)
