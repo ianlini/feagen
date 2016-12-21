@@ -42,6 +42,12 @@ id,lifetime,tested_age,weight,height,gender,income
         return data_df[['weight', 'height']]
 
     @require('data_df')
+    @will_generate('memory', 'mem_weight')
+    def gen_mem_weight(self, data):
+        data_df = data['data_df']
+        return {'mem_weight': data_df['weight']}
+
+    @require('data_df')
     @will_generate('h5py', 'BMI')
     def gen_bmi(self, data):
         data_df = data['data_df']

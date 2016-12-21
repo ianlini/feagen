@@ -36,8 +36,7 @@ def test_generate_lifetime_features():
         assert (set(global_data_h5f)
                 == set(get_data_keys_from_structure(
                     bundle_config['structure'])))
-        assert (set(data_bundle_h5f)
-                == {'features', 'test_filters', 'label'})
+        assert set(data_bundle_h5f) == {'features', 'test_filters', 'label'}
         assert set(data_bundle_h5f['test_filters']) == {'is_in_test_set'}
         assert data_bundle_h5f['features'].shape == (6, 4)
 
