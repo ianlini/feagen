@@ -5,7 +5,6 @@ from shutil import rmtree
 
 import h5py
 from feagen.tools.feagen_runner import feagen_run_with_configs
-from feagen.bundling import get_data_keys_from_structure
 
 
 def test_generate_lifetime_features():
@@ -28,10 +27,14 @@ def test_generate_lifetime_features():
             'test_filters': [
                 'is_in_test_set',
             ],
+            'test_dict': {
+                'comparison': ['weight', 'height', 'mem_raw_data'],
+            },
             'features': [
                 'weight',
-                'mem_weight',
                 'height',
+                'mem_raw_data',
+                'man_raw_data',
                 'BMI',
                 'weight_divided_by_height',
             ],
@@ -47,10 +50,10 @@ def test_generate_lifetime_features():
 
     data_bundle_hdf_path = join(data_bundles_dir, bundle_config['name'] + '.h5')
     with h5py.File(data_bundle_hdf_path, "r") as data_bundle_h5f:
-        assert set(data_bundle_h5f) == {'features', 'test_filters', 'label'}
+        assert set(data_bundle_h5f) == {'features', 'test_filters', 'label',
+                                        'test_dict'}
         assert set(data_bundle_h5f['test_filters']) == {'is_in_test_set'}
-        assert (data_bundle_h5f['features'].shape
-                == (6, len(bundle_config['structure']['features'])))
+        assert data_bundle_h5f['features'].shape == (6, 8)
 
     os.remove(global_data_hdf_path)
     rmtree(data_bundles_dir)

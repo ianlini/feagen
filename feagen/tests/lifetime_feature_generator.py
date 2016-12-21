@@ -42,10 +42,18 @@ id,lifetime,tested_age,weight,height,gender,income
         return data_df[['weight', 'height']]
 
     @require('data_df')
-    @will_generate('memory', 'mem_weight')
-    def gen_mem_weight(self, data):
+    @will_generate('memory', 'mem_raw_data')
+    def gen_mem_raw_data(self, data):
         data_df = data['data_df']
-        return {'mem_weight': data_df['weight']}
+        return {'mem_raw_data': data_df[['weight', 'height']].values}
+
+    @require('data_df')
+    @will_generate('h5py', 'man_raw_data', manually_create_dataset=True)
+    def gen_man_raw_data(self, data, create_dataset_functions):
+        data_df = data['data_df']
+        dset = create_dataset_functions['man_raw_data'](
+            shape=(data_df.shape[0], 2))
+        dset[...] = data_df[['weight', 'height']].values
 
     @require('data_df')
     @will_generate('h5py', 'BMI')
