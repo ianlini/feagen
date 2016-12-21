@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import os
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
@@ -16,6 +16,7 @@ else:
     ]
     install_requires = [
         'six',
+        'future',
         'mkdir-p',
         'h5py',
         'bistiming>=0.1.1',
@@ -66,5 +67,8 @@ setup(
         'License :: OSI Approved :: BSD License',
     ],
     test_suite='nose.collector',
-    packages=find_packages(),
+    packages=[
+        'feagen',
+        'feagen.tools',
+    ],
 )

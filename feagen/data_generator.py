@@ -1,97 +1,16 @@
-from os.path import dirname
 import inspect
-import re
-from collections import defaultdict
+from past.builtins import basestring
 
 import six
 import networkx as nx
 from bistiming import SimpleTimer
-from mkdir_p import mkdir_p
 
-from .data_handler import (
-    MemoryIntermediateDataHandler,
-    HDF5DataHandler,
+from .dag import DataDAG
+from .bundling import DataBundlerMixin
+from .data_handlers import (
+    MemoryDataHandler,
+    H5pyDataHandler,
 )
-
-
-def draw_dag(nx_dag, path):
-    mkdir_p(dirname(path))
-    agraph = nx.nx_agraph.to_agraph(nx_dag)
-    for edge in agraph.edges_iter():
-        edge.attr['label'] = edge.attr['keys']
-        if edge.attr['keys'] == "[]":
-            edge.attr['label'] = ""
-        if (edge.attr['skipped_keys'] != "[]"
-                and edge.attr['skipped_keys'] is not None):
-            edge.attr['label'] += "(%s skipped)" % edge.attr['skipped_keys']
-    for node in agraph.nodes_iter():
-        if node.attr['skipped'] == "True":
-            node.attr['label'] = str(node) + " (skipped)"
-            node.attr['fontcolor'] = 'grey'
-    agraph.layout('dot')
-    agraph.draw(path)
-
-
-class DataDAG(object):
-    # TODO: This is not really a DAG
-
-    def __init__(self):
-        self._data_key_node_dict = {}
-        self._nx_dag = nx.DiGraph()
-
-    def add_node(self, function_name, function):
-        # pylint: disable=protected-access
-        config = function._feagen_will_generate
-
-        for key in config['keys']:
-            if key in self._data_key_node_dict:
-                raise ValueError("duplicated data key '{}' in {} and {}".format(
-                    key, self._data_key_node_dict[key], function_name))
-            self._data_key_node_dict[key] = function_name
-
-        self._nx_dag.add_node(function_name, config)
-
-    def get_node_keys_dict(self, data_keys):
-        node_keys_dict = defaultdict(list)
-        for data_key in data_keys:
-            node_keys_dict[self[data_key]].append(data_key)
-        return node_keys_dict
-
-    def add_edges_from(self, requirements):
-        edges = []
-        for function_name, function_requirements in requirements:
-            node_keys_dict = self.get_node_keys_dict(function_requirements)
-            for source_node, data_keys in six.viewitems(node_keys_dict):
-                edges.append((source_node, function_name, {'keys': data_keys}))
-        self._nx_dag.add_edges_from(edges)
-        if not nx.is_directed_acyclic_graph(self._nx_dag):
-            raise ValueError("The dependency graph has cycle.")
-
-    def __getitem__(self, key):
-        found_node = None
-        found_key = None
-        for regex_key, node in six.viewitems(self._data_key_node_dict):
-            if re.match("(%s)$" % regex_key, key) is not None:
-                if found_node is None:
-                    found_node = node
-                    found_key = regex_key
-                else:
-                    raise ValueError("The data key '{}' matches multiple keys: "
-                                     "'{}' in {} and '{}' in {}.".format(
-                                         key, found_key, found_node,
-                                         regex_key, node))
-        if found_node is None:
-            raise KeyError(key)
-        return found_node
-
-    def draw(self, path):
-        draw_dag(self._nx_dag, path)
-
-    def get_subgraph_with_ancestors(self, nodes):
-        subgraph_nodes = set(nodes)
-        for node in nodes:
-            subgraph_nodes |= nx.ancestors(self._nx_dag, node)
-        return self._nx_dag.subgraph(subgraph_nodes)
 
 
 class FeatureGeneratorType(type):
@@ -130,14 +49,14 @@ def _run_function(function, handler_key, will_generate_keys, kwargs):
     return result_dict
 
 
-def check_result_dict_type(result_dict, function_name):
+def _check_result_dict_type(result_dict, function_name):
     if not (hasattr(result_dict, 'keys')
             and hasattr(result_dict, '__getitem__')):
         raise ValueError("the return value of mehod {} should have "
                          "keys and __getitem__ methods".format(function_name))
 
 
-class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
+class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
 
     def __init__(self, handlers):
         handler_set = set(six.viewkeys(handlers))
@@ -149,13 +68,18 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
                                      lacked_handlers_set))
         self._handlers = handlers
 
+    def get(self, key):
+        node_attr = self._dag.get_node_attr(key)
+        handler = self._handlers[node_attr['handler']]
+        data = handler.get(key)[key]
+        return data
+
     def _get_upstream_data(self, dag, node):
         data = {}
         for source, _, attr in dag.in_edges_iter(node, data=True):
             source_handler = self._handlers[dag.node[source]['handler']]
             data.update(source_handler.get(attr['keys']))
         return data
-
 
     def _generate_one(self, dag, node, handler_key, will_generate_keys, mode,
                       handler_kwargs):
@@ -174,12 +98,12 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
         function = getattr(self, node)
         result_dict = _run_function(function, handler_key, will_generate_keys,
                                     function_kwargs)
-        check_result_dict_type(result_dict, node)
+        _check_result_dict_type(result_dict, node)
         handler.check_result_dict_keys(result_dict, will_generate_keys, node,
                                        handler_key, **handler_kwargs)
         handler.write_data(result_dict)
 
-    def dag_prune_can_skip(self, involved_dag, generation_order):
+    def _dag_prune_can_skip(self, involved_dag, generation_order):
         for node in reversed(generation_order):
             node_attr = involved_dag.node[node]
             handler = self._handlers[node_attr['handler']]
@@ -204,7 +128,7 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
             node_attr['skipped'] = True if can_skip_node else False
 
     def generate(self, data_keys):
-        if isinstance(data_keys, str):
+        if isinstance(data_keys, basestring):
             data_keys = (data_keys,)
 
         # get the nodes ad edges that should be considered during the generation
@@ -217,7 +141,7 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
                           {'keys': list(set(data_keys))}))
         involved_dag.add_edges_from(edges)
         generation_order = nx.topological_sort(involved_dag)[:-1]
-        self.dag_prune_can_skip(involved_dag, generation_order)
+        self._dag_prune_can_skip(involved_dag, generation_order)
 
         # generate data
         for node in generation_order:
@@ -252,14 +176,13 @@ class FeatureGenerator(DataGenerator):
     def __init__(self, global_data_hdf_path=None, handlers=None):
         if handlers is None:
             handlers = {}
-        if ('intermediate_data' in self._handler_set
-                and 'intermediate_data' not in handlers):
-            handlers['intermediate_data'] = MemoryIntermediateDataHandler()
-        if ('features' in self._handler_set
-                and 'features' not in handlers):
+        if ('memory' in self._handler_set
+                and 'memory' not in handlers):
+            handlers['memory'] = MemoryDataHandler()
+        if ('h5py' in self._handler_set
+                and 'h5py' not in handlers):
             if global_data_hdf_path is None:
                 raise ValueError("global_data_hdf_path should be specified "
                                  "when initiating FeatureGenerator.")
-            handlers['features'] = HDF5DataHandler(global_data_hdf_path)
+            handlers['h5py'] = H5pyDataHandler(global_data_hdf_path)
         super(FeatureGenerator, self).__init__(handlers)
-

@@ -6,7 +6,7 @@ from shutil import rmtree
 import h5py
 import yaml
 from feagen.tools.feagen_runner import feagen_run_with_configs
-from feagen.bundling import flatten_structure
+from feagen.bundling import get_data_keys_from_structure
 
 
 def test_generate_lifetime_features():
@@ -34,9 +34,9 @@ def test_generate_lifetime_features():
     with h5py.File(global_data_hdf_path, "r") as global_data_h5f, \
             h5py.File(data_bundle_hdf_path, "r") as data_bundle_h5f:
         assert (set(global_data_h5f)
-                == set(flatten_structure(bundle_config['structure'])))
-        assert (set(data_bundle_h5f)
-                == {'features', 'test_filters', 'label'})
+                == set(get_data_keys_from_structure(
+                    bundle_config['structure'])))
+        assert set(data_bundle_h5f) == {'features', 'test_filters', 'label'}
         assert set(data_bundle_h5f['test_filters']) == {'is_in_test_set'}
         assert data_bundle_h5f['features'].shape == (6, 4)
 

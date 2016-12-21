@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from io import StringIO
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import feagen as fg
@@ -10,13 +13,21 @@ from feagen.decorators import (
 
 class LifetimeFeatureGenerator(fg.FeatureGenerator):
 
-    def __init__(self, global_data_hdf_path, data_csv_path):
+    def __init__(self, global_data_hdf_path):
         super(LifetimeFeatureGenerator, self).__init__(global_data_hdf_path)
-        self.data_csv_path = data_csv_path
 
     @will_generate('memory', 'data_df')
     def gen_data_df(self):
-        return {'data_df': pd.read_csv(self.data_csv_path, index_col='id')}
+        csv = StringIO("""\
+id,lifetime,tested_age,weight,height,gender,income
+0, 68, 50, 60.1, 170.5, f, 22000
+1, 59, 41, 90.4, 168.9, m, 19000
+2, 52, 39, 46.2, 173.6, m, 70000
+3, 68, 25, 93.9, 180.0, m, 1000000
+4, 99, 68, 65.7, 157.6, f, 46000
+5, 90, 81, 56.3, 170.2, f, 17000
+""")
+        return {'data_df': pd.read_csv(csv, index_col='id')}
 
     @require('data_df')
     @will_generate('h5py', 'label')
@@ -29,6 +40,20 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
     def gen_raw_data_features(self, data):
         data_df = data['data_df']
         return data_df[['weight', 'height']]
+
+    @require('data_df')
+    @will_generate('memory', 'mem_raw_data')
+    def gen_mem_raw_data(self, data):
+        data_df = data['data_df']
+        return {'mem_raw_data': data_df[['weight', 'height']].values}
+
+    @require('data_df')
+    @will_generate('h5py', 'man_raw_data', manually_create_dataset=True)
+    def gen_man_raw_data(self, data, create_dataset_functions):
+        data_df = data['data_df']
+        dset = create_dataset_functions['man_raw_data'](
+            shape=(data_df.shape[0], 2))
+        dset[...] = data_df[['weight', 'height']].values
 
     @require('data_df')
     @will_generate('h5py', 'BMI')

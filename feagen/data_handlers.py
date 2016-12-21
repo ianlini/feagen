@@ -1,5 +1,6 @@
 import os.path
 from functools import partial
+from past.builtins import basestring
 
 import six
 import h5py
@@ -32,7 +33,7 @@ def check_exact_match_keys(result_dict_key_set, will_generate_key_set,
                              will_generate_key_set, handler_key))
 
 
-class HDF5DataHandler(DataHandler):
+class H5pyDataHandler(DataHandler):
 
     def __init__(self, hdf_path):
         hdf_dir = os.path.dirname(hdf_path)
@@ -46,7 +47,7 @@ class HDF5DataHandler(DataHandler):
         return False
 
     def get(self, keys):
-        if isinstance(keys, str):
+        if isinstance(keys, basestring):
             keys = (keys,)
         return {key: self.h5f[key] for key in keys}
 
@@ -87,9 +88,10 @@ class HDF5DataHandler(DataHandler):
                     self.h5f[key][...] = result
                 else:
                     self.h5f.create_dataset(key, data=result)
+        self.h5f.flush()
 
 
-class MemoryIntermediateDataHandler(DataHandler):
+class MemoryDataHandler(DataHandler):
 
     def __init__(self):
         self.data = {}
@@ -100,7 +102,7 @@ class MemoryIntermediateDataHandler(DataHandler):
         return False
 
     def get(self, keys):
-        if isinstance(keys, str):
+        if isinstance(keys, basestring):
             keys = (keys,)
         return {key: self.data[key] for key in keys}
 

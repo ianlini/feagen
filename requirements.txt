@@ -1,4 +1,5 @@
 six
+future
 mkdir-p
 h5py
 bistiming
