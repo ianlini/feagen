@@ -6,6 +6,7 @@ import networkx as nx
 from bistiming import SimpleTimer
 
 from .dag import DataDAG
+from .bundling import DataBundlerMixin
 from .data_handlers import (
     MemoryDataHandler,
     H5pyDataHandler,
@@ -55,7 +56,7 @@ def _check_result_dict_type(result_dict, function_name):
                          "keys and __getitem__ methods".format(function_name))
 
 
-class DataGenerator(six.with_metaclass(FeatureGeneratorType, object)):
+class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
 
     def __init__(self, handlers):
         handler_set = set(six.viewkeys(handlers))
@@ -185,4 +186,3 @@ class FeatureGenerator(DataGenerator):
                                  "when initiating FeatureGenerator.")
             handlers['h5py'] = H5pyDataHandler(global_data_hdf_path)
         super(FeatureGenerator, self).__init__(handlers)
-

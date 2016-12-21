@@ -8,7 +8,7 @@ import yaml
 from mkdir_p import mkdir_p
 from feagen.dag import draw_dag
 
-from ..bundling import flatten_structure, bundle_data
+from ..bundling import get_data_keys_from_structure
 
 
 def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None):
@@ -37,7 +37,7 @@ def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None):
     generator_kwargs = global_config['generator_kwargs']
     data_generator = generator_class(**generator_kwargs)
 
-    data_keys = flatten_structure(bundle_config['structure'])
+    data_keys = get_data_keys_from_structure(bundle_config['structure'])
     involved_dag = data_generator.generate(data_keys)
 
     if dag_output_path is not None:
@@ -46,10 +46,9 @@ def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None):
     mkdir_p(global_config['data_bundles_dir'])
     bundle_path = join(global_config['data_bundles_dir'],
                        bundle_config['name'] + '.h5')
-    bundle_data(bundle_config['structure'],
-                global_data_hdf_path=generator_kwargs['global_data_hdf_path'],
-                data_bundle_hdf_path=bundle_path,
-                structure_config=bundle_config['structure_config'])
+    data_generator.bundle(bundle_config['structure'],
+                          data_bundle_hdf_path=bundle_path,
+                          structure_config=bundle_config['structure_config'])
 
 
 def feagen_run(argv=sys.argv[1:]):

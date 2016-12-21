@@ -88,6 +88,7 @@ class H5pyDataHandler(DataHandler):
                     self.h5f[key][...] = result
                 else:
                     self.h5f.create_dataset(key, data=result)
+        self.h5f.flush()
 
 
 class MemoryDataHandler(DataHandler):
