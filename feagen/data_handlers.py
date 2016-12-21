@@ -136,10 +136,16 @@ class PandasHDFDataHandler(DataHandler):
 
     def write_data(self, result_dict):
         for key, result in six.iteritems(result_dict):
-            is_null = ((isinstance(result, pd.DataFrame)
-                        and result.isnull().any().any())
-                       or (isinstance(result, pd.Series)
-                           and result.isnull().any()))
+            is_null = False
+            if isinstance(result, pd.DataFrame):
+                if result.isnull().any().any():
+                    is_null = True
+            elif isinstance(result, pd.Series):
+                if result.isnull().any():
+                    is_null = True
+            else:
+                raise ValueError("PandasHDFDataHandler doesn't support type "
+                                 "{} (in key {})".format(type(result), key))
             if is_null:
                 raise ValueError("data {} have nan".format(key))
             with SimpleTimer("Writing generated data {} to hdf5 file"
