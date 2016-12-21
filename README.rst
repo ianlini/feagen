@@ -66,6 +66,7 @@ After the generator class and the config are defined, we can now generate the fe
 A command line tool ``feagen`` can be used now:
 
    usage: feagen [-h] [-g GLOBAL_CONFIG] [-b BUNDLE_CONFIG] [-d DAG_OUTPUT_PATH]
+                 [--no-bundle]
 
    Generate global data and data bundle.
 
@@ -80,6 +81,7 @@ A command line tool ``feagen`` can be used now:
      -d DAG_OUTPUT_PATH, --dag-output-path DAG_OUTPUT_PATH
                            draw the involved subDAG to the provided path
                            (default: None)
+     --no-bundle           not generate the data bundle
 
 You can specify the paths of the global config, the bundle config, and the involved subDAG image using ``-g``, ``-b`` and ``-d`` respectively.
 
@@ -96,6 +98,9 @@ The global data will not be removed and can be reused.
 If you want to generate another bundle, the data that has been generated will not be generated again.
 This saves much time!
 
-Finally, the data bundle is generated according to the ``structure`` specified in the bundle config. You can use `hdfview <https://support.hdfgroup.org/products/java/hdfview/>`_ to check the resulting global data and data bundle. It may help you understand what the output is.
+Finally, the data bundle is generated according to the ``structure`` specified in the bundle config.
+You can use `hdfview <https://support.hdfgroup.org/products/java/hdfview/>`_ to check the resulting global data and data bundle.
+It may help you understand what the output is.
+You can also use the argument ``--no-bundle`` if you don't want to generate the data bundle (only the global data will be generated).
 
 Now, you can use the data bundle to do machine learning!

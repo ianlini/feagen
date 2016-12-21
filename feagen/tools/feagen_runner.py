@@ -11,7 +11,8 @@ from feagen.dag import draw_dag
 from ..bundling import get_data_keys_from_structure
 
 
-def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None):
+def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None,
+                            no_bundle=False):
     # TODO: check the config
     """Generate feature with configurations.
 
@@ -43,12 +44,13 @@ def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None):
     if dag_output_path is not None:
         draw_dag(involved_dag, dag_output_path)
 
-    mkdir_p(global_config['data_bundles_dir'])
-    bundle_path = join(global_config['data_bundles_dir'],
-                       bundle_config['name'] + '.h5')
-    data_generator.bundle(bundle_config['structure'],
-                          data_bundle_hdf_path=bundle_path,
-                          structure_config=bundle_config['structure_config'])
+    if not no_bundle:
+        mkdir_p(global_config['data_bundles_dir'])
+        bundle_path = join(global_config['data_bundles_dir'],
+                           bundle_config['name'] + '.h5')
+        data_generator.bundle(
+            bundle_config['structure'], data_bundle_hdf_path=bundle_path,
+            structure_config=bundle_config['structure_config'])
 
 
 def feagen_run(argv=sys.argv[1:]):
@@ -66,6 +68,8 @@ def feagen_run(argv=sys.argv[1:]):
     parser.add_argument('-d', '--dag-output-path', default=None,
                         help="draw the involved subDAG to the provided path "
                              "(default: None)")
+    parser.add_argument('--no-bundle', action='store_true',
+                        help="not generate the data bundle")
     args = parser.parse_args(argv)
     with open(args.global_config) as fp:
         global_config = yaml.load(fp)
@@ -73,4 +77,5 @@ def feagen_run(argv=sys.argv[1:]):
         bundle_config = yaml.load(fp)
     filename_without_extension = splitext(basename(args.bundle_config))[0]
     bundle_config.setdefault('name', filename_without_extension)
-    feagen_run_with_configs(global_config, bundle_config, args.dag_output_path)
+    feagen_run_with_configs(global_config, bundle_config, args.dag_output_path,
+                            args.no_bundle)
