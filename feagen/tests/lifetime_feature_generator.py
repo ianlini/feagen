@@ -13,8 +13,9 @@ from feagen.decorators import (
 
 class LifetimeFeatureGenerator(fg.FeatureGenerator):
 
-    def __init__(self, global_data_hdf_path):
-        super(LifetimeFeatureGenerator, self).__init__(global_data_hdf_path)
+    def __init__(self, global_data_hdf_path, global_table_hdf_path):
+        super(LifetimeFeatureGenerator, self).__init__(global_data_hdf_path,
+                                                       global_table_hdf_path)
 
     @will_generate('memory', 'data_df')
     def gen_data_df(self):
@@ -54,6 +55,21 @@ id,lifetime,tested_age,weight,height,gender,income
         dset = create_dataset_functions['man_raw_data'](
             shape=(data_df.shape[0], 2))
         dset[...] = data_df[['weight', 'height']].values
+
+    @require('data_df')
+    @will_generate('pandas_hdf', ['pd_weight', 'pd_height'])
+    def gen_raw_data_table(self, data):
+        data_df = data['data_df']
+        result_df = data_df[['weight', 'height']]
+        result_df.rename(columns={'weight': 'pd_weight', 'height': 'pd_height'},
+                         inplace=True)
+        return result_df
+
+    @require('data_df')
+    @will_generate('pandas_hdf', 'pd_raw_data')
+    def gen_raw_data_df(self, data):
+        data_df = data['data_df']
+        return {'pd_raw_data': data_df[['weight', 'height']]}
 
     @require('data_df')
     @will_generate('h5py', 'BMI')

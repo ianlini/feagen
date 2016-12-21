@@ -10,6 +10,7 @@ from .bundling import DataBundlerMixin
 from .data_handlers import (
     MemoryDataHandler,
     H5pyDataHandler,
+    PandasHDFDataHandler,
 )
 
 
@@ -173,7 +174,8 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
 
 class FeatureGenerator(DataGenerator):
 
-    def __init__(self, global_data_hdf_path=None, handlers=None):
+    def __init__(self, global_data_hdf_path=None, global_table_hdf_path=None,
+                 handlers=None):
         if handlers is None:
             handlers = {}
         if ('memory' in self._handler_set
@@ -185,4 +187,10 @@ class FeatureGenerator(DataGenerator):
                 raise ValueError("global_data_hdf_path should be specified "
                                  "when initiating FeatureGenerator.")
             handlers['h5py'] = H5pyDataHandler(global_data_hdf_path)
+        if ('pandas_hdf' in self._handler_set
+                and 'pandas_hdf' not in handlers):
+            if global_table_hdf_path is None:
+                raise ValueError("global_table_hdf_path should be specified "
+                                 "when initiating FeatureGenerator.")
+            handlers['pandas_hdf'] = PandasHDFDataHandler(global_table_hdf_path)
         super(FeatureGenerator, self).__init__(handlers)

@@ -23,6 +23,8 @@ else:
         'numpy',
         'networkx',
         'pyyaml',
+        'tables',
+        'pandas',
     ]
     tests_require = []
 
