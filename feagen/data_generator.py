@@ -114,17 +114,18 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
                 if (target != 'generate'
                         and involved_dag.node[target]['skipped']):
                     edge_attr['skipped_keys'] = edge_attr['keys']
+                    edge_attr['nonskipped_keys'] = []
                     edge_attr['keys'] = []
                 else:
                     required_keys = edge_attr['keys']
                     edge_attr['skipped_keys'] = []
-                    edge_attr['keys'] = []
+                    edge_attr['nonskipped_keys'] = []
                     for required_key in required_keys:
                         if handler.can_skip(required_key):
                             edge_attr['skipped_keys'].append(required_key)
                         else:
-                            edge_attr['keys'].append(required_key)
-                    if len(edge_attr['keys']) > 0:
+                            edge_attr['nonskipped_keys'].append(required_key)
+                    if len(edge_attr['nonskipped_keys']) > 0:
                         can_skip_node = False
             node_attr['skipped'] = True if can_skip_node else False
 

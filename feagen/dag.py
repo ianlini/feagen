@@ -8,11 +8,12 @@ import networkx as nx
 
 
 def draw_dag(nx_dag, path):
-    mkdir_p(dirname(path))
+    if dirname(path) != '':
+        mkdir_p(dirname(path))
     agraph = nx.nx_agraph.to_agraph(nx_dag)
     for edge in agraph.edges_iter():
-        edge.attr['label'] = edge.attr['keys']
-        if edge.attr['keys'] == "[]":
+        edge.attr['label'] = edge.attr['nonskipped_keys']
+        if edge.attr['nonskipped_keys'] == "[]":
             edge.attr['label'] = ""
         if (edge.attr['skipped_keys'] != "[]"
                 and edge.attr['skipped_keys'] is not None):
