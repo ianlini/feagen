@@ -12,12 +12,15 @@ def draw_dag(nx_dag, path):
         mkdir_p(dirname(path))
     agraph = nx.nx_agraph.to_agraph(nx_dag)
     for edge in agraph.edges_iter():
-        edge.attr['label'] = edge.attr['nonskipped_keys']
-        if edge.attr['nonskipped_keys'] == "[]":
+        if edge.attr['nonskipped_keys'] is None:
+            edge.attr['label'] = edge.attr['keys']
+        else:
             edge.attr['label'] = ""
-        if (edge.attr['skipped_keys'] != "[]"
-                and edge.attr['skipped_keys'] is not None):
-            edge.attr['label'] += "(%s skipped)" % edge.attr['skipped_keys']
+            if edge.attr['nonskipped_keys'] != "[]":
+                edge.attr['label'] += edge.attr['nonskipped_keys']
+            if (edge.attr['skipped_keys'] != "[]"
+                    and edge.attr['skipped_keys'] is not None):
+                edge.attr['label'] += "(%s skipped)" % edge.attr['skipped_keys']
     for node in agraph.nodes_iter():
         if node.attr['skipped'] == "True":
             node.attr['label'] = str(node) + " (skipped)"
