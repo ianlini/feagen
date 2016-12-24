@@ -279,3 +279,54 @@ by the bundle method.
 
 Train Model
 ===========
+
+Load the bundled data.
+
+.. code-block:: python
+
+    bundle_hdf_path = os.path.join(
+        os.path.dirname(__file__), 'data_bundles', 'feature01.h5')
+    bundle_f = h5py.File(bundle_hdf_path, 'r')
+
+Retrieve the data.
+
+.. code-block:: python
+
+    is_valid = np.array(bundle_f['info']['is_valid'])
+    is_test = np.array(bundle_f['info']['is_test'])
+    passenger_id = np.array(bundle_f['id']['passenger_id'])
+    label = np.array(bundle_f['label']['label'])
+
+The feature with structure config concat True is loaded this way.
+
+.. code-block:: python
+
+    feature = np.array(bundle_f['features'])
+
+Set the filter for data.
+
+.. code-block:: python
+
+    train_filter = (np.bitwise_and(is_valid == 0, is_test == 0))
+    valid_filter = (np.bitwise_and(is_valid == 1, is_test == 0))
+    test_filter = (is_test == 1)
+
+Evaluate the validation set.
+
+.. code-block:: python
+
+    clf = RandomForestClassifier()
+    clf.fit(feature[train_filter], label[train_filter])
+    print('validation score:',
+          clf.score(feature[valid_filter], label[valid_filter]))
+
+Output the prediction to file and ready to submit to kaggle.
+
+.. code-block:: python
+
+    prediction = clf.predict(feature[test_filter])
+
+    df = pd.DataFrame(prediction, columns=['Survived'],
+                      index=passenger_id[test_filter])
+    df.index.rename('PassengerId')
+    df.to_csv(prediction_csv_path)
