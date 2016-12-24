@@ -12,8 +12,10 @@ data_bundles_dir: data_bundles
 # The additional arguments that will be given when initiating the data generator
 # object.
 generator_kwargs:
-  global_data_hdf_path:
-    global_data.h5
+  h5py_hdf_path:
+    h5py.h5
+  pandas_hdf_path:
+    pandas.h5
 """
     default_bundle_config = """\
 # The name of this bundle. This will be the file name of the data bundle.
