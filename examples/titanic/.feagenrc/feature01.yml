@@ -25,5 +25,3 @@ structure:
 structure_config:
   features:
     concat: True
-  info:
-    concat: True

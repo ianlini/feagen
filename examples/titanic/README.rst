@@ -45,7 +45,7 @@ FeatureGenerator.  For the key generator_kwargs, we set the path to the data and
 where the data to be stored (like the following). These arguments will be used
 to initialize the FeatureGenerator.
 
-.. code-block:: yml
+.. code-block:: yaml
 
     generator_kwargs:
       global_data_hdf_path:
@@ -207,7 +207,7 @@ In feature01.yml, we need to define the name of this feature set and which
 components generated from FeatureGenerator to include in this bundle. An example 
 which includes all the features we have generated previously.
 
-.. code-block:: yml
+.. code-block:: yaml
 
     name: feature01
     structure:
@@ -224,15 +224,13 @@ which includes all the features we have generated previously.
     structure_config:
       features:
         concat: True
-      info:
-        concat: True
 
 The benifit of using bundle is that it lets users to reuse previously generated
 features, controls which set of feature has been experimented before and lets
 multiple users able to cooperate with each other.
 
-Feature Generation
-==================
+Feature Generation (from command line)
+======================================
 
 After all the configuration, run the following command will start the feature
 generation process.
@@ -244,6 +242,40 @@ generation process.
 All the feature generated will be stored in data/global_feature.h5 and the file
 which bundles feature01 appears in data_bundles/feature01.h5.
 
+Feature Generation (from Python)
+================================
+
+Define the features to be generated and declare the FeatureGenerator.
+
+.. code-block:: python
+
+    label_list = ['label']
+    info_list = ['is_valid', 'is_test']
+    id_list = ['passenger_id']
+    feature_list = ['family_size', 'sibsp', 'age', 'pclass']
+    generator = TitanicFeatureGenerator(h5py_hdf_path,
+        os.path.join(os.path.abspath(__file__), 'data', 'train.csv'),
+        os.path.join(os.path.abspath(__file__), 'data', 'test.csv'))
+
+Generate the feature by the generate method and pass in the name of the features
+to be generated.
+
+.. code-block:: python
+
+    generator.generate(feature_list + label_list + info_list)
+
+Define the structure of the bundle and their configuration. Generate the bundle
+by the bundle method.
+
+.. code-block:: python
+
+    bundle_structure = {'label': label_list,
+                        'info': info_list,
+                        'id': id_list,
+                        'features': feature_list}
+    structure_config = {'features': {'concat': True}}
+    generator.bundle(bundle_structure, data_bundle_hdf_path=bundle_hdf_path,
+            structure_config=structure_config)
 
 Train Model
 ===========

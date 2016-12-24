@@ -81,26 +81,29 @@ class TitanicFeatureGenerator(fg.FeatureGenerator):
         return {'age': age,
                 'sibsp': data_df['SibSp'].values}
 
-
-def generate_titanic_features(data_csv_dir, global_feature_hdf_path,
-        concat_feature_hdf_path):
-    feature_list = ['family_size', 'sibsp', 'age', 'pclass']
+def generate_titanic_features(h5py_hdf_path, bundle_hdf_path):
     label_list = ['label']
-    info_list = ['is_valid', 'is_test', 'passenger_id']
-    generator = TitanicFeatureGenerator(global_feature_hdf_path,
-        os.path.join(data_csv_dir, 'train.csv'),
-        os.path.join(data_csv_dir, 'test.csv'))
+    info_list = ['is_valid', 'is_test']
+    id_list = ['passenger_id']
+    feature_list = ['family_size', 'sibsp', 'age', 'pclass']
+    generator = TitanicFeatureGenerator(h5py_hdf_path,
+        os.path.join(os.path.abspath(__file__), 'data', 'train.csv'),
+        os.path.join(os.path.abspath(__file__), 'data', 'test.csv'))
+
     generator.generate(feature_list + label_list + info_list)
 
+    bundle_structure = {'label': label_list,
+                        'info': info_list,
+                        'id': id_list,
+                        'features': feature_list}
+    structure_config = {'features': {'concat': True}}
+    generator.bundle(bundle_structure, data_bundle_hdf_path=bundle_hdf_path,
+            structure_config=structure_config)
 
 def main():
-    data_csv_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
-    concat_feature_hdf_path = os.path.join(data_csv_dir, 'concat_feature.h5')
-    global_feature_hdf_path = os.path.join(data_csv_dir, 'global_feature.h5')
-    prediction_csv_path = 'prediction.csv'
-
-    generate_titanic_features(data_csv_dir, global_feature_hdf_path,
-            concat_feature_hdf_path)
+    generate_titanic_features(
+        os.path.join(os.path.dirname(__file__), 'data', 'global_feature.h5'),
+        os.path.join(os.path.dirname(__file__), 'data_bundles', 'feature01.h5'))
 
 
 if __name__ == '__main__':
