@@ -14,7 +14,17 @@ def require(data_keys):
     return require_decorator
 
 
-def will_generate(data_handler, will_generate_keys, **handler_kwargs):
+def will_generate(data_handler, will_generate_keys, mode='full',
+                  **handler_kwargs):
+    """
+
+    Parameters
+    ==========
+    mode: {'full', 'one'}
+        full: generate all keys in ``will_generate_keys`` in one function call
+        one: only generate one of the keys in ``will_generate_keys`` in one
+             function call
+    """
     if isinstance(will_generate_keys, basestring):
         will_generate_keys = (will_generate_keys,)
 
@@ -24,29 +34,10 @@ def will_generate(data_handler, will_generate_keys, **handler_kwargs):
             raise NotImplementedError("Multiple will_generate is not supported"
                                       "yet.")
         func._feagen_will_generate = {
-            'mode': 'full',
+            'mode': mode,
             'handler': data_handler,
             'keys': will_generate_keys,
             'handler_kwargs': handler_kwargs,
         }
         return func
     return will_generate_decorator
-
-
-def will_generate_one_of(data_handler, will_generate_keys, **handler_kwargs):
-    if isinstance(will_generate_keys, basestring):
-        will_generate_keys = (will_generate_keys,)
-
-    def will_generate_one_of_decorator(func):
-        # pylint: disable=protected-access
-        if hasattr(func, '_feagen_will_generate'):
-            raise NotImplementedError("Multiple will_generate is not supported"
-                                      "yet.")
-        func._feagen_will_generate = {
-            'mode': 'one',
-            'handler': data_handler,
-            'keys': will_generate_keys,
-            'handler_kwargs': handler_kwargs,
-        }
-        return func
-    return will_generate_one_of_decorator

@@ -3,7 +3,6 @@ from sklearn.model_selection import train_test_split
 import feagen as fg
 from feagen.decorators import (
     will_generate,
-    will_generate_one_of,
     require,
 )
 
@@ -38,7 +37,7 @@ class LifetimeFeatureGenerator(fg.FeatureGenerator):
         return {'BMI': bmi}
 
     @require('data_df')
-    @will_generate_one_of('h5py', r'\w+_divided_by_\w+')
+    @will_generate('h5py', r'\w+_divided_by_\w+', mode='one')
     def gen_divided_by(self, will_generate_key, data):
         import re
         data_df = data['data_df']
