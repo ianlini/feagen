@@ -9,8 +9,9 @@ from feagen.decorators import (
 
 class LifetimeFeatureGenerator(fg.FeatureGenerator):
 
-    def __init__(self, global_data_hdf_path, data_csv_path):
-        super(LifetimeFeatureGenerator, self).__init__(global_data_hdf_path)
+    def __init__(self, h5py_hdf_path, data_csv_path):
+        super(LifetimeFeatureGenerator, self).__init__(
+            h5py_hdf_path=h5py_hdf_path)
         self.data_csv_path = data_csv_path
 
     @will_generate('memory', 'data_df')

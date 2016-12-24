@@ -12,9 +12,10 @@ from feagen.decorators import (
 
 class LifetimeFeatureGenerator(fg.FeatureGenerator):
 
-    def __init__(self, global_data_hdf_path, global_table_hdf_path):
-        super(LifetimeFeatureGenerator, self).__init__(global_data_hdf_path,
-                                                       global_table_hdf_path)
+    def __init__(self, h5py_hdf_path, pandas_hdf_path):
+        super(LifetimeFeatureGenerator, self).__init__(
+            h5py_hdf_path=h5py_hdf_path,
+            pandas_hdf_path=pandas_hdf_path)
 
     @will_generate('memory', 'data_df')
     def gen_data_df(self):

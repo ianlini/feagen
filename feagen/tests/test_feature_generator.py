@@ -8,8 +8,8 @@ from feagen.tools.feagen_runner import feagen_run_with_configs
 
 
 def test_generate_lifetime_features():
-    global_data_hdf_path = mkstemp(suffix=".h5")[1]
-    global_table_hdf_path = mkstemp(suffix=".h5")[1]
+    h5py_hdf_path = mkstemp(suffix=".h5")[1]
+    pandas_hdf_path = mkstemp(suffix=".h5")[1]
     data_bundles_dir = mkdtemp()
 
     global_config = {
@@ -17,8 +17,8 @@ def test_generate_lifetime_features():
                            '.LifetimeFeatureGenerator',
         'data_bundles_dir': data_bundles_dir,
         'generator_kwargs': {
-            'global_data_hdf_path': global_data_hdf_path,
-            'global_table_hdf_path': global_table_hdf_path,
+            'h5py_hdf_path': h5py_hdf_path,
+            'pandas_hdf_path': pandas_hdf_path,
         },
     }
 
@@ -67,6 +67,6 @@ def test_generate_lifetime_features():
         assert set(data_bundle_h5f['test_filters']) == {'is_in_test_set'}
         assert data_bundle_h5f['features'].shape == (6, 12)
 
-    os.remove(global_data_hdf_path)
-    os.remove(global_table_hdf_path)
+    os.remove(h5py_hdf_path)
+    os.remove(pandas_hdf_path)
     rmtree(data_bundles_dir)
