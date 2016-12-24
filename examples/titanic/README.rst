@@ -10,6 +10,7 @@ Project structure
 =================
 
 A project using feagen consist the following:
+
 * global hdf file: storing all generated feature
 * a feature generator inherited from feagen.FeatureGenerator: this class contains
   the implementation of how each feature is generated
@@ -34,6 +35,7 @@ Getting Started
 Create the feagen configuration file template by:
 
 .. code-block:: bash
+
    feagen-init
 
 This command will create a directory .feagenrc in your current directory. In
@@ -44,6 +46,7 @@ where the data to be stored (like the following). These arguments will be used
 to initialize the FeatureGenerator.
 
 .. code-block:: yml
+
     generator_kwargs:
       global_data_hdf_path:
         data/global_data.h5
@@ -68,6 +71,7 @@ We will started by the implementation of FeatureGenerator.
 1. In __init__ method, we need to pass in the path to the downloaded data.
 
 .. code-block:: python
+
     class TitanicFeatureGenerator(fg.FeatureGenerator):
         def __init__(self, global_data_hdf_path, data_train_csv_path, data_test_csv_path):
             super(TitanicFeatureGenerator, self).__init__(global_feature_hdf_path)
@@ -80,6 +84,7 @@ We will started by the implementation of FeatureGenerator.
    as a key for 
 
 .. code-block:: python
+
     @will_generate('memory', 'data_df')
     def gen_data_df(self):
         trn_df = pd.read_csv(self.data_train_csv_path, index_col='PassengerId')
@@ -93,6 +98,7 @@ We will started by the implementation of FeatureGenerator.
    returned dictionary will be combined into one.
 
 .. code-block:: python
+
     @require('data_df')
     @will_generate('h5py', 'parch')
     def gen_parch(self, data):
@@ -109,6 +115,7 @@ We will started by the implementation of FeatureGenerator.
         return {'passenger_id': data_df.index.values}
 
 .. code-block:: python
+
     @require('data_df')
     @will_generate('h5py', 'label')
     def gen_label(self, data):
@@ -116,6 +123,7 @@ We will started by the implementation of FeatureGenerator.
         return {'label': data_df['Survived'].values}
 
 .. code-block:: python
+
     @require('data_df')
     @will_generate('h5py', 'is_test')
     def gen_is_test(self, data):
@@ -123,6 +131,7 @@ We will started by the implementation of FeatureGenerator.
         return {'is_test': (temp == -1)}
 
 .. code-block:: python
+
     @require('data_df')
     @will_generate('h5py', 'is_valid')
     def gen_is_validation(self, data):
@@ -144,6 +153,7 @@ We will started by the implementation of FeatureGenerator.
 4. Ways to build features
 
 .. code-block:: python
+
     @require('data_df')
     @will_generate('h5py', 'parch')
     def gen_parch(self, data):
@@ -151,6 +161,7 @@ We will started by the implementation of FeatureGenerator.
         return {'parch': data_df['Parch']}
 
 .. code-block:: python
+
     @require('data_df')
     @will_generate('h5py', 'pclass')
     def gen_pclass(self, data):
@@ -162,6 +173,7 @@ We will started by the implementation of FeatureGenerator.
                           .fit_transform(pclass.reshape((-1, 1)))}
 
 .. code-block:: python
+
     @require('data_df')
     @will_generate('h5py', 'family_size')
     def gen_family_size(self, data):
@@ -169,7 +181,9 @@ We will started by the implementation of FeatureGenerator.
         return {'family_size': (data_df['SibSp'] + data_df['Parch']).values}
 
 You may generate multiple features at a time.
+
 .. code-block:: python
+
     @require('data_df')
     @will_generate('h5py', ['age', 'sibsp'])
     def gen_age_sibsp(self, data):
@@ -186,6 +200,7 @@ Bundle
 Bundle lets the user control which set of feature to use.
 
 .. code-block:: bash
+
    cp ./.feagenrc/bundle_config.yml ./.feagenrc/feature01.yml
 
 In feature01.yml, we need to define the name of this feature set and which
@@ -193,6 +208,7 @@ components generated from FeatureGenerator to include in this bundle. An example
 which includes all the features we have generated previously.
 
 .. code-block:: yml
+
     name: feature01
     structure:
       id: passenger_id
@@ -222,6 +238,7 @@ After all the configuration, run the following command will start the feature
 generation process.
 
 .. code-block:: bash
+
     feagen -b .feagenrc/feature01.yml 
 
 All the feature generated will be stored in data/global_feature.h5 and the file
