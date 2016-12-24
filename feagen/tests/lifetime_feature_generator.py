@@ -59,7 +59,7 @@ id,lifetime,tested_age,weight,height,gender,income
     @will_generate('pandas_hdf', ['pd_weight', 'pd_height'])
     def gen_raw_data_table(self, data):
         data_df = data['data_df']
-        result_df = data_df[['weight', 'height']]
+        result_df = data_df.loc[:, ['weight', 'height']]
         result_df.rename(columns={'weight': 'pd_weight', 'height': 'pd_height'},
                          inplace=True)
         return result_df
