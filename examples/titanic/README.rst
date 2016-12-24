@@ -11,10 +11,10 @@ Project structure
 
 A project using feagen consist the following:
 
-* global hdf file: storing all generated feature
+* hdf file: storing all generated feature
 * a feature generator inherited from feagen.FeatureGenerator: this class contains
   the implementation of how each feature is generated
-* .feagenrc/config.yml: sets the path to the global hdf file, bundles files, and
+* .feagenrc/config.yml: sets the path to the hdf file, bundles files, and
   the feature generator to use
 * multiple .feagenrc/bundle_config.yml: each defines how to bundle a set of
   features
@@ -48,7 +48,7 @@ to initialize the FeatureGenerator.
 .. code-block:: yaml
 
     generator_kwargs:
-      global_data_hdf_path:
+      h5py_hdf_path:
         data/global_data.h5
       data_train_csv_path:
         data/train.csv
@@ -73,8 +73,8 @@ We will started by the implementation of FeatureGenerator.
 .. code-block:: python
 
     class TitanicFeatureGenerator(fg.FeatureGenerator):
-        def __init__(self, global_data_hdf_path, data_train_csv_path, data_test_csv_path):
-            super(TitanicFeatureGenerator, self).__init__(global_feature_hdf_path)
+        def __init__(self, h5py_hdf_path, data_train_csv_path, data_test_csv_path):
+            super(TitanicFeatureGenerator, self).__init__(h5py_hdf_path)
             self.data_train_csv_path = data_train_csv_path
             self.data_test_csv_path = data_test_csv_path
 

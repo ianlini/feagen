@@ -12,8 +12,8 @@ from feagen.decorators import (
 
 class TitanicFeatureGenerator(fg.FeatureGenerator):
 
-    def __init__(self, global_data_hdf_path, data_train_csv_path, data_test_csv_path):
-        super(TitanicFeatureGenerator, self).__init__(global_data_hdf_path)
+    def __init__(self, h5py_hdf_path, data_train_csv_path, data_test_csv_path):
+        super(TitanicFeatureGenerator, self).__init__(h5py_hdf_path)
         self.data_train_csv_path = data_train_csv_path
         self.data_test_csv_path = data_test_csv_path
 
