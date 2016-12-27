@@ -10,14 +10,14 @@ def load_feature_run_model(bundle_hdf_path, prediction_csv_path):
     with h5py.File(bundle_hdf_path, 'r') as bundle_f:
         is_valid = bundle_f['info']['is_valid'].value
         is_test = bundle_f['info']['is_test'].value
-        passenger_id = bundle_f['id']['passenger_id'].value
-        label = bundle_f['label']['label'].value
+        passenger_id = bundle_f['id'].value
+        label = bundle_f['label'].value
 
         # concated
         feature = bundle_f['features'].value
 
-    train_filter = (np.bitwise_and(is_valid, is_test))
-    valid_filter = (np.bitwise_and(is_valid, is_test))
+    train_filter = (np.bitwise_and(~is_valid, ~is_test))
+    valid_filter = (np.bitwise_and(is_valid, ~is_test))
     test_filter = is_test
 
     ##############
@@ -31,6 +31,7 @@ def load_feature_run_model(bundle_hdf_path, prediction_csv_path):
     ##############
     # prediction #
     ##############
+    clf.fit(feature[~test_filter], label[~test_filter])
     prediction = clf.predict(feature[test_filter])
 
     df = pd.DataFrame(prediction, columns=['Survived'],

@@ -41,10 +41,11 @@ class TitanicFeatureGenerator(fg.FeatureGenerator):
         from sklearn.model_selection import train_test_split
         import numpy as np
         data_df = data['data_df']
-        df = pd.DataFrame(0, index=data_df.index, columns=['is_valid'], dtype=bool)
+        df = pd.DataFrame(False, index=data_df.index, columns=['is_valid'], dtype=bool)
         random_state = np.random.RandomState(1126)
         _, valid_id = train_test_split(
-            data_df.index, test_size=0.3, random_state=random_state)
+            data_df.loc[(data_df['Survived']!=-1)].index, test_size=0.3,
+            random_state=random_state)
         df.loc[valid_id, 'is_valid'] = True
         return df
 
@@ -73,11 +74,10 @@ class TitanicFeatureGenerator(fg.FeatureGenerator):
     @require('data_df')
     @will_generate('h5py', ['age', 'sibsp'])
     def gen_age_sibsp(self, data):
-        data_df = data['data_df']
+        data_df = data['data_df'].copy()
         # clean up age data
-        age = data_df['Age'].values
-        age[np.isnan(age)] = np.mean(age[~np.isnan(age)])
-        return {'age': age,
+        data_df.loc[data_df['Age'].isnull(), 'Age'] = data_df['Age'].mean()
+        return {'age': data_df['Age'].values,
                 'sibsp': data_df['SibSp'].values}
 
 def generate_titanic_features(generator, bundle_hdf_path):
@@ -98,9 +98,9 @@ def generate_titanic_features(generator, bundle_hdf_path):
 
 def main():
     h5py_hdf_path = os.path.join(
-        os.path.dirname(__file__), 'data', 'h5py.h5')
-    bundle_hdf_path = 
-        os.path.join(os.path.dirname(__file__), 'data_bundles', 'feature01.h5')
+            os.path.dirname(__file__), 'data', 'h5py.h5')
+    bundle_hdf_path = os.path.join(
+            os.path.dirname(__file__), 'data_bundles', 'feature01.h5')
     generator = TitanicFeatureGenerator(h5py_hdf_path,
         os.path.join(os.path.abspath(__file__), 'data', 'train.csv'),
         os.path.join(os.path.abspath(__file__), 'data', 'test.csv'))

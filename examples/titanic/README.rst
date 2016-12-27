@@ -137,11 +137,12 @@ We will started by the implementation of FeatureGenerator.
         from sklearn.model_selection import train_test_split
         import numpy as np
         data_df = data['data_df']
-        df = pd.DataFrame(0, index=data_df.index, columns=['is_valid'], dtype=bool)
+        df = pd.DataFrame(False, index=data_df.index, columns=['is_valid'], dtype=bool)
         random_state = np.random.RandomState(1126)
         _, valid_id = train_test_split(
-            data_df.index, test_size=0.3, random_state=random_state)
-        df.loc[valid_id, 'is_valid'] = 1
+            data_df.loc[(data_df['Survived']!=-1)].index, test_size=0.3,
+            random_state=random_state)
+        df.loc[valid_id, 'is_valid'] = True
         return df
 
   note that the return value don't have to be a dictionary, it just has to have
@@ -186,11 +187,10 @@ You may generate multiple features at a time.
     @require('data_df')
     @will_generate('h5py', ['age', 'sibsp'])
     def gen_age_sibsp(self, data):
-        data_df = data['data_df']
+        data_df = data['data_df'].copy()
         # clean up age data
-        age = data_df['Age'].values
-        age[np.isnan(age)] = np.mean(age[~np.isnan(age)])
-        return {'age': age,
+        data_df.loc[data_df['Age'].isnull(), 'Age'] = data_df['Age'].mean()
+        return {'age': data_df['Age'].values,
                 'sibsp': data_df['SibSp'].values}
 
 Bundle
@@ -294,8 +294,8 @@ Retrieve the data.
     with h5py.File(bundle_hdf_path, 'r') as bundle_f:
         is_valid = bundle_f['info']['is_valid'].value
         is_test = bundle_f['info']['is_test'].value
-        passenger_id = bundle_f['id']['passenger_id'].value
-        label = bundle_f['label']['label'].value
+        passenger_id = bundle_f['id'].value
+        label = bundle_f['label'].value
 
 The feature with structure config concat True is loaded this way.
 
@@ -307,9 +307,9 @@ Set the filter for data.
 
 .. code-block:: python
 
-    train_filter = (np.bitwise_and(is_valid == 0, is_test == 0))
-    valid_filter = (np.bitwise_and(is_valid == 1, is_test == 0))
-    test_filter = (is_test == 1)
+    train_filter = (np.bitwise_and(~is_valid, ~is_test))
+    valid_filter = (np.bitwise_and(is_valid, ~is_test))
+    test_filter = is_test
 
 Evaluate the validation set.
 
@@ -317,7 +317,7 @@ Evaluate the validation set.
 
     clf = RandomForestClassifier()
     clf.fit(feature[train_filter], label[train_filter])
-    print('validation score:',
+    print('validation score: (Accuracy)',
           clf.score(feature[valid_filter], label[valid_filter]))
 
 Output the prediction to file and ready to submit to kaggle.
