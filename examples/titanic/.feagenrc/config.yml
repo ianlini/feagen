@@ -5,7 +5,7 @@ data_bundles_dir: data_bundles
 # object.
 generator_kwargs:
   h5py_hdf_path:
-    global_data.h5
+    h5py.h5
   data_train_csv_path:
     data/train.csv
   data_test_csv_path:

@@ -33,8 +33,7 @@ class TitanicFeatureGenerator(fg.FeatureGenerator):
     @require('data_df')
     @will_generate('h5py', 'is_test')
     def gen_is_test(self, data):
-        temp = data['data_df']['Survived'].values
-        return {'is_test': (temp == -1)}
+        return {'is_test': (data['data_df']['Survived'].values == -1)}
 
     @require('data_df')
     @will_generate('h5py', 'is_valid')
@@ -46,7 +45,7 @@ class TitanicFeatureGenerator(fg.FeatureGenerator):
         random_state = np.random.RandomState(1126)
         _, valid_id = train_test_split(
             data_df.index, test_size=0.3, random_state=random_state)
-        df.loc[valid_id, 'is_valid'] = 1
+        df.loc[valid_id, 'is_valid'] = True
         return df
 
     @require('data_df')
@@ -81,14 +80,11 @@ class TitanicFeatureGenerator(fg.FeatureGenerator):
         return {'age': age,
                 'sibsp': data_df['SibSp'].values}
 
-def generate_titanic_features(h5py_hdf_path, bundle_hdf_path):
+def generate_titanic_features(generator, bundle_hdf_path):
     label_list = ['label']
     info_list = ['is_valid', 'is_test']
     id_list = ['passenger_id']
     feature_list = ['family_size', 'sibsp', 'age', 'pclass']
-    generator = TitanicFeatureGenerator(h5py_hdf_path,
-        os.path.join(os.path.abspath(__file__), 'data', 'train.csv'),
-        os.path.join(os.path.abspath(__file__), 'data', 'test.csv'))
 
     generator.generate(feature_list + label_list + info_list)
 
@@ -101,10 +97,15 @@ def generate_titanic_features(h5py_hdf_path, bundle_hdf_path):
             structure_config=structure_config)
 
 def main():
-    generate_titanic_features(
-        os.path.join(os.path.dirname(__file__), 'data', 'global_feature.h5'),
-        os.path.join(os.path.dirname(__file__), 'data_bundles', 'feature01.h5'))
+    h5py_hdf_path = os.path.join(
+        os.path.dirname(__file__), 'data', 'h5py.h5')
+    bundle_hdf_path = 
+        os.path.join(os.path.dirname(__file__), 'data_bundles', 'feature01.h5')
+    generator = TitanicFeatureGenerator(h5py_hdf_path,
+        os.path.join(os.path.abspath(__file__), 'data', 'train.csv'),
+        os.path.join(os.path.abspath(__file__), 'data', 'test.csv'))
 
+    generate_titanic_features(generator, bundle_hdf_path)
 
 if __name__ == '__main__':
     main()

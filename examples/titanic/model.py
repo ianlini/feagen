@@ -16,9 +16,9 @@ def load_feature_run_model(bundle_hdf_path, prediction_csv_path):
         # concated
         feature = bundle_f['features'].value
 
-    train_filter = (np.bitwise_and(is_valid == 0, is_test == 0))
-    valid_filter = (np.bitwise_and(is_valid == 1, is_test == 0))
-    test_filter = (is_test == 1)
+    train_filter = (np.bitwise_and(is_valid, is_test))
+    valid_filter = (np.bitwise_and(is_valid, is_test))
+    test_filter = is_test
 
     ##############
     # validation #

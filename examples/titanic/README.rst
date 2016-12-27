@@ -248,13 +248,13 @@ Define the features to be generated and declare the FeatureGenerator.
 
 .. code-block:: python
 
+    generator = TitanicFeatureGenerator(h5py_hdf_path,
+        os.path.join(os.path.abspath(__file__), 'data', 'train.csv'),
+        os.path.join(os.path.abspath(__file__), 'data', 'test.csv'))
     label_list = ['label']
     info_list = ['is_valid', 'is_test']
     id_list = ['passenger_id']
     feature_list = ['family_size', 'sibsp', 'age', 'pclass']
-    generator = TitanicFeatureGenerator(h5py_hdf_path,
-        os.path.join(os.path.abspath(__file__), 'data', 'train.csv'),
-        os.path.join(os.path.abspath(__file__), 'data', 'test.csv'))
 
 Generate the feature by the generate method and pass in the name of the features
 to be generated.
