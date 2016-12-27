@@ -86,11 +86,11 @@ def generate_titanic_features(generator, bundle_hdf_path):
     id_list = ['passenger_id']
     feature_list = ['family_size', 'sibsp', 'age', 'pclass']
 
-    generator.generate(feature_list + label_list + info_list)
+    generator.generate(feature_list + label_list + info_list + id_list)
 
-    bundle_structure = {'label': label_list,
+    bundle_structure = {'label': label_list[0],
                         'info': info_list,
-                        'id': id_list,
+                        'id': id_list[0],
                         'features': feature_list}
     structure_config = {'features': {'concat': True}}
     generator.bundle(bundle_structure, data_bundle_hdf_path=bundle_hdf_path,
@@ -98,12 +98,12 @@ def generate_titanic_features(generator, bundle_hdf_path):
 
 def main():
     h5py_hdf_path = os.path.join(
-            os.path.dirname(__file__), 'data', 'h5py.h5')
+            os.path.dirname(__file__), 'h5py.h5')
     bundle_hdf_path = os.path.join(
             os.path.dirname(__file__), 'data_bundles', 'feature01.h5')
     generator = TitanicFeatureGenerator(h5py_hdf_path,
-        os.path.join(os.path.abspath(__file__), 'data', 'train.csv'),
-        os.path.join(os.path.abspath(__file__), 'data', 'test.csv'))
+        os.path.join(os.path.dirname(__file__), 'data', 'train.csv'),
+        os.path.join(os.path.dirname(__file__), 'data', 'test.csv'))
 
     generate_titanic_features(generator, bundle_hdf_path)
 

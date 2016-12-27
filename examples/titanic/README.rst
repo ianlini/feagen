@@ -241,6 +241,22 @@ generation process.
 All the feature generated will be stored in data/global_feature.h5 and the file
 which bundles feature01 appears in data_bundles/feature01.h5.
 
+The generated bundle hdf5 will have the following structure:
+
+.. code-block:: ipython
+
+	In [1]: import h5py
+
+	In [2]: f = h5py.File('./data_bundles/feature01.h5', 'r')
+
+	In [3]: f.visit(print)
+	features
+	id
+	info
+	info/is_test
+	info/is_valid
+	label
+
 Feature Generation (from Python)
 ================================
 
@@ -264,13 +280,14 @@ to be generated.
     generator.generate(feature_list + label_list + info_list)
 
 Define the structure of the bundle and their configuration. Generate the bundle
-by the bundle method.
+by the bundle method. (The following structure will the same as the setting in
+.feagenrc/feature01.yml)
 
 .. code-block:: python
 
-    bundle_structure = {'label': label_list,
+    bundle_structure = {'label': label_list[0],
                         'info': info_list,
-                        'id': id_list,
+                        'id': id_list[0],
                         'features': feature_list}
     structure_config = {'features': {'concat': True}}
     generator.bundle(bundle_structure, data_bundle_hdf_path=bundle_hdf_path,
