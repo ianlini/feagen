@@ -127,8 +127,7 @@ We will started by the implementation of FeatureGenerator.
     @require('data_df')
     @will_generate('h5py', 'is_test')
     def gen_is_test(self, data):
-        temp = data['data_df']['Survived'].values
-        return {'is_test': (temp == -1)}
+        return {'is_test': (data['data_df']['Survived'].values == -1)}
 
 .. code-block:: python
 
@@ -292,16 +291,17 @@ Retrieve the data.
 
 .. code-block:: python
 
-    is_valid = np.array(bundle_f['info']['is_valid'])
-    is_test = np.array(bundle_f['info']['is_test'])
-    passenger_id = np.array(bundle_f['id']['passenger_id'])
-    label = np.array(bundle_f['label']['label'])
+    with h5py.File(bundle_hdf_path, 'r') as bundle_f:
+        is_valid = bundle_f['info']['is_valid'].value
+        is_test = bundle_f['info']['is_test'].value
+        passenger_id = bundle_f['id']['passenger_id'].value
+        label = bundle_f['label']['label'].value
 
 The feature with structure config concat True is loaded this way.
 
 .. code-block:: python
 
-    feature = np.array(bundle_f['features'])
+        feature = np.array(bundle_f['features'])
 
 Set the filter for data.
 

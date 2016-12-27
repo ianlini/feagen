@@ -7,17 +7,14 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 
 def load_feature_run_model(bundle_hdf_path, prediction_csv_path):
-    bundle_f = h5py.File(bundle_hdf_path, 'r')
+    with h5py.File(bundle_hdf_path, 'r') as bundle_f:
+        is_valid = bundle_f['info']['is_valid'].value
+        is_test = bundle_f['info']['is_test'].value
+        passenger_id = bundle_f['id']['passenger_id'].value
+        label = bundle_f['label']['label'].value
 
-    is_valid = np.array(bundle_f['info']['is_valid'])
-    is_test = np.array(bundle_f['info']['is_test'])
-    passenger_id = np.array(bundle_f['id']['passenger_id'])
-    label = np.array(bundle_f['label']['label'])
-
-    # concated
-    feature = np.array(bundle_f['features'])
-
-    bundle_f.close()
+        # concated
+        feature = bundle_f['features'].value
 
     train_filter = (np.bitwise_and(is_valid == 0, is_test == 0))
     valid_filter = (np.bitwise_and(is_valid == 1, is_test == 0))
@@ -28,7 +25,7 @@ def load_feature_run_model(bundle_hdf_path, prediction_csv_path):
     ##############
     clf = RandomForestClassifier()
     clf.fit(feature[train_filter], label[train_filter])
-    print('validation score:',
+    print('validation score: (Accuracy)',
           clf.score(feature[valid_filter], label[valid_filter]))
 
     ##############
@@ -43,6 +40,7 @@ def load_feature_run_model(bundle_hdf_path, prediction_csv_path):
 
 
 if __name__ == '__main__':
-    load_feature_run_model(
-        os.path.join(os.path.dirname(__file__), 'data_bundles', 'feature01.h5'),
-        "prediction.csv")
+    bundle_hdf_path = os.path.join(
+        os.path.dirname(__file__), 'data_bundles', 'feature01.h5')
+    prediction_csv_path = 'prediction.csv'
+    load_feature_run_model(bundle_hdf_path, prediction_csv_path)
