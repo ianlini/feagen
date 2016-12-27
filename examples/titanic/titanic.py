@@ -59,11 +59,11 @@ class TitanicFeatureGenerator(fg.FeatureGenerator):
     @will_generate('h5py', 'pclass')
     def gen_pclass(self, data):
         from sklearn.preprocessing import OneHotEncoder
-        data_df = data['data_df'].copy() # it is mutable
+        data_pclass = data['data_df'][['Pclass']]
         # set unknown as a class
-        data_df.loc[data_df['Pclass'].isnull(), 'Pclass'] = 4
-        return {'pclass': OneHotEncoder(sparse=False).fit_transform(
-                            data_df['Pclass'].values.reshape((-1, 1)))}
+        data_pclass = data_pclass.fillna(4)
+        return {'pclass': OneHotEncoder(sparse=False)
+                            .fit_transform(data_pclass.values)}
 
     @require('data_df')
     @will_generate('h5py', 'family_size')
@@ -74,7 +74,7 @@ class TitanicFeatureGenerator(fg.FeatureGenerator):
     @require('data_df')
     @will_generate('h5py', ['age', 'sibsp'])
     def gen_age_sibsp(self, data):
-        data_df = data['data_df'].copy()
+        data_df = data['data_df'].copy() # mutable
         # clean up age data
         data_df.loc[data_df['Age'].isnull(), 'Age'] = data_df['Age'].mean()
         return {'age': data_df['Age'].values,
