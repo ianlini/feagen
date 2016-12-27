@@ -166,11 +166,11 @@ We will started by the implementation of FeatureGenerator.
     @will_generate('h5py', 'pclass')
     def gen_pclass(self, data):
         from sklearn.preprocessing import OneHotEncoder
-        data_df = data['data_df']
-        pclass = np.array(data_df['Pclass'].values)
-        pclass[np.isnan(pclass)] = 4 # unknown as a class
-        return {'pclass': OneHotEncoder(sparse=False)
-                          .fit_transform(pclass.reshape((-1, 1)))}
+        data_df = data['data_df'].copy() # it is mutable
+        # set unknown as a class
+        data_df.loc[data_df['Pclass'].isnull(), 'Pclass'] = 4
+        return {'pclass': OneHotEncoder(sparse=False).fit_transform(
+                            data_df['Pclass'].values.reshape((-1, 1)))}
 
 .. code-block:: python
 
