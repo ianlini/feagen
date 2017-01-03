@@ -61,7 +61,7 @@ class TitanicFeatureGenerator(fg.FeatureGenerator):
         from sklearn.preprocessing import OneHotEncoder
         data_pclass = data['data_df'][['Pclass']]
         # set unknown as a class
-        data_pclass = data_pclass.fillna(4, inplace=True)
+        data_pclass.fillna(4, inplace=True)
         return {'pclass': OneHotEncoder(sparse=False)
                             .fit_transform(data_pclass.values)}
 
