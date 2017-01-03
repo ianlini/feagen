@@ -4,6 +4,7 @@ from abc import ABCMeta, abstractmethod
 
 from past.builtins import basestring
 import six
+from six.moves import cPickle
 import h5py
 from mkdir_p import mkdir_p
 import numpy as np
@@ -32,6 +33,7 @@ def check_exact_match_keys(result_dict_key_set, will_generate_key_set,
 
 
 class DataHandler(six.with_metaclass(ABCMeta, object)):
+
     @abstractmethod
     def can_skip(self, data_key):
         pass
@@ -172,3 +174,30 @@ class MemoryDataHandler(DataHandler):
 
     def write_data(self, result_dict):
         self.data.update(result_dict)
+
+
+class PickleDataHandler(DataHandler):
+
+    def __init__(self, pickle_dir):
+        mkdir_p(pickle_dir)
+        self.pickle_dir = pickle_dir
+
+    def can_skip(self, data_key):
+        data_path = os.path.join(self.pickle_dir, data_key + ".pkl")
+        if os.path.exists(data_path):
+            return True
+        return False
+
+    def get(self, keys):
+        if isinstance(keys, basestring):
+            keys = (keys,)
+        data = {}
+        for key in keys:
+            with open(os.path.join(self.pickle_dir, key + ".pkl"), "rb") as fp:
+                data[key] = cPickle.load(fp)
+        return data
+
+    def write_data(self, result_dict):
+        for key, val in six.viewitems(result_dict):
+            with open(os.path.join(self.pickle_dir, key + ".pkl"), "wb") as fp:
+                cPickle.dump(val, fp, protocol=cPickle.HIGHEST_PROTOCOL)
