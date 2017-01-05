@@ -12,11 +12,6 @@ from feagen.decorators import (
 
 class LifetimeFeatureGenerator(fg.FeatureGenerator):
 
-    def __init__(self, h5py_hdf_path, pandas_hdf_path):
-        super(LifetimeFeatureGenerator, self).__init__(
-            h5py_hdf_path=h5py_hdf_path,
-            pandas_hdf_path=pandas_hdf_path)
-
     @will_generate('memory', 'data_df')
     def gen_data_df(self):
         csv = StringIO("""\
@@ -90,10 +85,17 @@ id,lifetime,tested_age,weight,height,gender,income
         return {will_generate_key: division_result}
 
     @require('data_df')
+    @will_generate('pickle', 'train_test_split')
+    def gen_train_test_split(self, data):
+        data_df = data['data_df']
+        train_id, test_id = train_test_split(
+            data_df.index, test_size=0.5, random_state=0)
+        return {'train_test_split': (train_id, test_id)}
+
+    @require(('data_df', 'train_test_split'))
     @will_generate('h5py', 'is_in_test_set')
     def gen_is_in_test_set(self, data):
         data_df = data['data_df']
-        _, test_id = train_test_split(
-            data_df.index, test_size=0.5, random_state=0)
+        _, test_id = data['train_test_split']
         is_in_test_set = data_df.index.isin(test_id)
         return {'is_in_test_set': is_in_test_set}

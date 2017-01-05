@@ -10,6 +10,7 @@ from feagen.tools.feagen_runner import feagen_run_with_configs
 def test_generate_lifetime_features():
     h5py_hdf_path = mkstemp(suffix=".h5")[1]
     pandas_hdf_path = mkstemp(suffix=".h5")[1]
+    pickle_dir = mkdtemp()
     data_bundles_dir = mkdtemp()
 
     global_config = {
@@ -19,6 +20,7 @@ def test_generate_lifetime_features():
         'generator_kwargs': {
             'h5py_hdf_path': h5py_hdf_path,
             'pandas_hdf_path': pandas_hdf_path,
+            'pickle_dir': pickle_dir,
         },
     }
 
@@ -69,4 +71,5 @@ def test_generate_lifetime_features():
 
     os.remove(h5py_hdf_path)
     os.remove(pandas_hdf_path)
+    rmtree(pickle_dir)
     rmtree(data_bundles_dir)
