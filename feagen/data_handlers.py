@@ -42,7 +42,8 @@ class DataHandler(six.with_metaclass(ABCMeta, object)):
     def get(self, keys):
         pass
 
-    def get_function_kwargs(self, will_generate_keys, data):  # pylint: disable=unused-argument
+    def get_function_kwargs(self, will_generate_keys, data):
+        # pylint: disable=unused-argument
         kwargs = {}
         if len(data) > 0:
             kwargs['data'] = data
