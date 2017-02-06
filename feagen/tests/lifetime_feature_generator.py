@@ -95,7 +95,7 @@ id,lifetime,tested_age,weight,height,gender,income
         return {'train_test_split': (train_id, test_id)}
 
     @require(('data_df', 'train_test_split'))
-    @will_generate('h5py', 'is_in_test_set', format='csr')
+    @will_generate('h5py', 'is_in_test_set')
     def gen_is_in_test_set(self, data):
         data_df = data['data_df']
         _, test_id = data['train_test_split']
