@@ -45,7 +45,7 @@ with open('README.rst') as fp:
 
 setup(
     name='feagen',
-    version="1.0.0a3",
+    version="1.0.0a4",
     description=description,
     long_description=long_description,
     author='Ian Lin',
