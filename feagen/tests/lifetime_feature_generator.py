@@ -1,13 +1,15 @@
 from __future__ import unicode_literals
 from io import StringIO
 
-import pandas as pd
-from sklearn.model_selection import train_test_split
 import feagen as fg
 from feagen.decorators import (
-    will_generate,
     require,
+    will_generate,
 )
+import numpy as np
+import pandas as pd
+from scipy.sparse import csr_matrix
+from sklearn.model_selection import train_test_split
 
 
 class LifetimeFeatureGenerator(fg.FeatureGenerator):
@@ -98,4 +100,5 @@ id,lifetime,tested_age,weight,height,gender,income
         data_df = data['data_df']
         _, test_id = data['train_test_split']
         is_in_test_set = data_df.index.isin(test_id)
-        return {'is_in_test_set': is_in_test_set}
+        sparse_is_in_test_set = csr_matrix(is_in_test_set[:, np.newaxis])
+        return {'is_in_test_set': sparse_is_in_test_set}

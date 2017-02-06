@@ -21,10 +21,12 @@ else:
         'h5py',
         'bistiming>=0.1.1',
         'numpy',
+        'scipy',
         'networkx',
         'pyyaml',
         'tables',
         'pandas',
+        'h5sparse==0.0.2',
     ]
     tests_require = []
 

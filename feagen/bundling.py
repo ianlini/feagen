@@ -3,6 +3,7 @@ from past.builtins import basestring
 import numpy as np
 import pandas as pd
 import h5py
+import h5sparse
 import six
 from bistiming import IterTimer, SimpleTimer
 
@@ -94,8 +95,10 @@ class DataBundlerMixin(object):
                     else:
                         new_group = bundle_h5_group.create_group(key)
                         for data_key in val:
-                            new_group.create_dataset(data_key,
-                                                     data=self.get(data_key))
+                            data = self.get(data_key)
+                            if isinstance(data, h5sparse.Dataset):
+                                new_group = h5sparse.Group(new_group)
+                            new_group.create_dataset(data_key, data=data)
                 elif isinstance(val, dict):
                     new_group = bundle_h5_group.create_group(key)
                     _bundle_data(structure[key], structure_config.get(key, {}),

@@ -1,12 +1,12 @@
 import os
-from os.path import dirname, abspath, join
-from tempfile import mkstemp, mkdtemp
+from os.path import abspath, dirname, join
 from shutil import rmtree
+from tempfile import mkdtemp, mkstemp
 
+from feagen.bundling import get_data_keys_from_structure
+from feagen.tools.feagen_runner import feagen_run_with_configs
 import h5py
 import yaml
-from feagen.tools.feagen_runner import feagen_run_with_configs
-from feagen.bundling import get_data_keys_from_structure
 
 
 def test_generate_lifetime_features():

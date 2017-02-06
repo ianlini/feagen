@@ -4,10 +4,12 @@ mkdir-p
 h5py
 bistiming
 numpy
+scipy
 networkx
 pyyaml
 tables
 pandas
+h5sparse==0.0.2
 
 # for testing
 pylint

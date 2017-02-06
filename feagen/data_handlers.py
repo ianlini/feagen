@@ -1,15 +1,17 @@
 import os.path
-from functools import partial
 from abc import ABCMeta, abstractmethod
+from functools import partial
 
-from past.builtins import basestring
-import six
-from six.moves import cPickle
+from bistiming import SimpleTimer
 import h5py
+import h5sparse
 from mkdir_p import mkdir_p
 import numpy as np
 import pandas as pd
-from bistiming import SimpleTimer
+from past.builtins import basestring
+import scipy.sparse as ss
+import six
+from six.moves import cPickle
 
 
 def check_redundant_keys(result_dict_key_set, will_generate_key_set,
@@ -77,16 +79,21 @@ class H5pyDataHandler(DataHandler):
     def get(self, keys):
         if isinstance(keys, basestring):
             keys = (keys,)
-        return {key: self.h5f[key] for key in keys}
+        return {key: h5sparse.Group(self.h5f)[key] for key in keys}
 
     def get_function_kwargs(self, will_generate_keys, data,
                             manually_create_dataset=False):
         kwargs = {}
         if len(data) > 0:
             kwargs['data'] = data
-        if manually_create_dataset:
+        if manually_create_dataset is True:
             kwargs['create_dataset_functions'] = {
                 k: partial(self.h5f.create_dataset, k)
+                for k in will_generate_keys
+            }
+        elif manually_create_dataset == "csr":
+            kwargs['create_dataset_functions'] = {
+                k: partial(h5sparse.Group(self.h5f).create_dataset, k)
                 for k in will_generate_keys
             }
         return kwargs
@@ -106,16 +113,25 @@ class H5pyDataHandler(DataHandler):
                                    function_name, handler_key)
 
     def write_data(self, result_dict):
+        no_nan_check_dtype = [np.bool]
         for key, result in six.iteritems(result_dict):
-            if np.isnan(result).any():
+            if (result.dtype not in no_nan_check_dtype
+                    and np.isnan(result).any()):
                 raise ValueError("data {} have nan".format(key))
             with SimpleTimer("Writing generated data {} to hdf5 file"
                              .format(key),
                              end_in_new_line=False):
                 if key in self.h5f:
-                    self.h5f[key][...] = result
+                    # self.h5f[key][...] = result
+                    raise NotImplementedError("Overwriting not supported.")
                 else:
-                    self.h5f.create_dataset(key, data=result)
+                    if (isinstance(result, ss.csc_matrix)
+                            or isinstance(result, ss.csr_matrix)):
+                        # sparse matrix
+                        h5sparse.Group(self.h5f).create_dataset(key,
+                                                                data=result)
+                    else:
+                        self.h5f.create_dataset(key, data=result)
         self.h5f.flush()
 
 
