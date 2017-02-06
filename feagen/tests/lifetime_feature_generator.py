@@ -1,13 +1,13 @@
 from __future__ import unicode_literals
 from io import StringIO
 
-import pandas as pd
-from sklearn.model_selection import train_test_split
 import feagen as fg
 from feagen.decorators import (
-    will_generate,
     require,
+    will_generate,
 )
+import pandas as pd
+from sklearn.model_selection import train_test_split
 
 
 class LifetimeFeatureGenerator(fg.FeatureGenerator):

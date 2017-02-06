@@ -8,6 +8,7 @@ networkx
 pyyaml
 tables
 pandas
+h5sparse
 
 # for testing
 pylint

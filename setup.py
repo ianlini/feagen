@@ -25,6 +25,7 @@ else:
         'pyyaml',
         'tables',
         'pandas',
+        'h5sparse==0.0.1',
     ]
     tests_require = []
 
