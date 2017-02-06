@@ -6,7 +6,9 @@ from feagen.decorators import (
     require,
     will_generate,
 )
+import numpy as np
 import pandas as pd
+from scipy.sparse import csr_matrix
 from sklearn.model_selection import train_test_split
 
 
@@ -93,9 +95,10 @@ id,lifetime,tested_age,weight,height,gender,income
         return {'train_test_split': (train_id, test_id)}
 
     @require(('data_df', 'train_test_split'))
-    @will_generate('h5py', 'is_in_test_set')
+    @will_generate('h5py', 'is_in_test_set', format='csr')
     def gen_is_in_test_set(self, data):
         data_df = data['data_df']
         _, test_id = data['train_test_split']
         is_in_test_set = data_df.index.isin(test_id)
-        return {'is_in_test_set': is_in_test_set}
+        sparse_is_in_test_set = csr_matrix(is_in_test_set[:, np.newaxis])
+        return {'is_in_test_set': sparse_is_in_test_set}

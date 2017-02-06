@@ -21,6 +21,7 @@ else:
         'h5py',
         'bistiming>=0.1.1',
         'numpy',
+        'scipy',
         'networkx',
         'pyyaml',
         'tables',
