@@ -14,6 +14,9 @@ import six
 from six.moves import cPickle
 
 
+SPARSE_FORMAT_SET = set(['csr', 'csc'])
+
+
 def check_redundant_keys(result_dict_key_set, will_generate_key_set,
                          function_name, handler_key):
     redundant_key_set = result_dict_key_set - will_generate_key_set
@@ -91,7 +94,7 @@ class H5pyDataHandler(DataHandler):
                 k: partial(self.h5f.create_dataset, k)
                 for k in will_generate_keys
             }
-        elif manually_create_dataset == "csr":
+        elif manually_create_dataset in SPARSE_FORMAT_SET:
             kwargs['create_dataset_functions'] = {
                 k: partial(h5sparse.Group(self.h5f).create_dataset, k)
                 for k in will_generate_keys

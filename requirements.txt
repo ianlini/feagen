@@ -9,7 +9,7 @@ networkx
 pyyaml
 tables
 pandas
-h5sparse==0.0.2
+h5sparse>=0.0.2
 
 # for testing
 pylint
