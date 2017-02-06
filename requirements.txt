@@ -11,6 +11,7 @@ pandas
 
 # for testing
 pylint
+flake8
 tox
 
 # for example
