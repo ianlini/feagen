@@ -1,15 +1,15 @@
 import os.path
-from functools import partial
 from abc import ABCMeta, abstractmethod
+from functools import partial
 
-from past.builtins import basestring
-import six
-from six.moves import cPickle
+from bistiming import SimpleTimer
 import h5py
 from mkdir_p import mkdir_p
 import numpy as np
 import pandas as pd
-from bistiming import SimpleTimer
+from past.builtins import basestring
+import six
+from six.moves import cPickle
 
 
 def check_redundant_keys(result_dict_key_set, will_generate_key_set,
