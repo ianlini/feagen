@@ -87,7 +87,10 @@ class DataBundlerMixin(object):
             for key, val in six.viewitems(structure):
                 config = structure_config.get(key, {})
                 if isinstance(val, basestring):
-                    bundle_h5_group.create_dataset(key, data=self.get(val))
+                    data = self.get(val)
+                    if isinstance(data, h5sparse.Dataset):
+                        bundle_h5_group = h5sparse.Group(bundle_h5_group)
+                    bundle_h5_group.create_dataset(key, data=data)
                 elif isinstance(val, list):
                     if config.get('concat', False):
                         self.fill_concat_data(key, val, bundle_h5_group,

@@ -2,14 +2,14 @@ six
 future
 mkdir-p
 h5py
-bistiming
+bistiming>=0.1.1
 numpy
 scipy
 networkx
 pyyaml
 tables
 pandas
-h5sparse>=0.0.2
+h5sparse>=0.0.4
 
 # for testing
 pylint

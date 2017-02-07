@@ -26,7 +26,7 @@ else:
         'pyyaml',
         'tables',
         'pandas',
-        'h5sparse>=0.0.2',
+        'h5sparse>=0.0.4',
     ]
     tests_require = []
 
@@ -45,7 +45,7 @@ with open('README.rst') as fp:
 
 setup(
     name='feagen',
-    version="1.0.0a5",
+    version="1.0.0a6",
     description=description,
     long_description=long_description,
     author='Ian Lin',
