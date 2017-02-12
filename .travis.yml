@@ -1,6 +1,6 @@
 notifications:
   slack: true
-  email: false
+  email: true
 
 sudo: required
 language: python
