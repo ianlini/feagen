@@ -116,10 +116,11 @@ class H5pyDataHandler(DataHandler):
                                    function_name, handler_key)
 
     def write_data(self, result_dict):
-        no_nan_check_dtype = [np.bool]
         for key, result in six.iteritems(result_dict):
-            if (result.dtype not in no_nan_check_dtype
-                    and np.isnan(result).any()):
+            if isinstance(result, ss.spmatrix):
+                if np.isnan(result.data).any():
+                    raise ValueError("data {} have nan".format(key))
+            elif np.isnan(result).any():
                 raise ValueError("data {} have nan".format(key))
             with SimpleTimer("Writing generated data {} to hdf5 file"
                              .format(key),
