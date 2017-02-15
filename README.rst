@@ -17,8 +17,8 @@ Installation
 ------------
 .. code:: bash
 
-   pip install feagen
-
+   pip install feagen==1.0.0a7
+   
 Getting start
 -------------
 Getting start from the simple `lifetime prediction example </examples/lifetime_prediction/>`_ is an easy way.
