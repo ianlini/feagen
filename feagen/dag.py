@@ -1,8 +1,10 @@
 from os.path import dirname
 import re
 from collections import defaultdict
+from past.builtins import basestring
 
 import six
+from six.moves import map
 from mkdir_p import mkdir_p
 import networkx as nx
 
@@ -29,24 +31,35 @@ def draw_dag(nx_dag, path):
     agraph.draw(path)
 
 
-class DataDAG(object):
-    # TODO: This is not really a DAG
+class RegexDiGraph(object):
+    """Directed graph that each node is represented by regular expression.
+
+    We can use a string to find a node that has regex matching the string. The
+    matching groups can also be the arguments to define the edge. Because the
+    successor is matched depending on regex, the graph will be dynamically built
+    given some entry points.
+    """
 
     def __init__(self):
-        self._data_key_node_dict = {}
+        self._key_attr_dict = {}
         self._nx_dag = nx.DiGraph()
 
-    def add_node(self, function_name, function):
+    def add_node(self, keys=(), re_escape_keys=(), attrs=None):
         # pylint: disable=protected-access
-        config = function._feagen_will_generate
-
-        for key in config['keys']:
-            if key in self._data_key_node_dict:
-                raise ValueError("duplicated data key '{}' in {} and {}".format(
-                    key, self._data_key_node_dict[key], function_name))
-            self._data_key_node_dict[key] = function_name
-
-        self._nx_dag.add_node(function_name, config)
+        if isinstance(keys, basestring):
+            keys = (keys,)
+        if isinstance(re_escape_keys, basestring):
+            re_escape_keys = (re_escape_keys,)
+        re_escape_keys = map(re.escape, re_escape_keys)
+        keys = list(keys) + list(re_escape_keys)
+        if len(keys) == 0:
+            raise ValueError("keys and re_escape_keys for {} cannot be both "
+                             "empty.".format(attrs))
+        for key in keys:
+            if key in self._key_attr_dict:
+                raise ValueError("duplicated data key '{}' for {} and {}"
+                                 .format(key, self._key_attr_dict[key], attrs))
+            self._key_attr_dict[key] = attrs
 
     def get_node_keys_dict(self, data_keys):
         node_keys_dict = defaultdict(list)

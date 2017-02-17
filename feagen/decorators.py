@@ -16,7 +16,7 @@ def require(data_keys):
 
 def will_generate(data_handler, will_generate_keys, mode='full',
                   **handler_kwargs):
-    """
+    """The decorator that represents what data keys will be generated.
 
     Parameters
     ==========

@@ -5,7 +5,7 @@ import six
 import networkx as nx
 from bistiming import SimpleTimer
 
-from .dag import DataDAG
+from .dag import RegexDiGraph
 from .bundling import DataBundlerMixin
 from .data_handlers import (
     MemoryDataHandler,
@@ -17,25 +17,34 @@ from .data_handlers import (
 
 class FeatureGeneratorType(type):
 
-    def __init__(cls, name, bases, attrs):
+    def __init__(cls, name, bases, attrs):  # noqa
         # pylint: disable=protected-access
         super(FeatureGeneratorType, cls).__init__(name, bases, attrs)
 
         attrs = inspect.getmembers(
             cls, lambda a: hasattr(a, '_feagen_will_generate'))
 
-        dag = DataDAG()
-        # build DAG
-        requirements = []
+        dag = RegexDiGraph()
+        # build the dynamic DAG
         handler_set = set()
         for function_name, function in attrs:
-            dag.add_node(function_name, function)
+            mode = function._feagen_will_generate['mode']
+            will_generate_keys = function._feagen_will_generate['keys']
+            node_attrs = {'func_name': function_name}
+            node_attrs.update(function._feagen_will_generate)
+            if hasattr(function, '_feagen_require'):
+                node_attrs['require'] = function._feagen_require
+                del function.__dict__['_feagen_require']
+            if mode == 'one':
+                dag.add_node(will_generate_keys, attrs=node_attrs)
+            elif mode == 'full':
+                dag.add_node(re_escape_keys=will_generate_keys,
+                             attrs=node_attrs)
+            else:
+                raise ValueError('Mode {} is not supported'.format(mode))
             handler_set.add(function._feagen_will_generate['handler'])
             del function.__dict__['_feagen_will_generate']
-            if hasattr(function, '_feagen_require'):
-                requirements.append((function_name, function._feagen_require))
-                del function.__dict__['_feagen_require']
-        dag.add_edges_from(requirements)
+
         cls._dag = dag
         cls._handler_set = handler_set
 
