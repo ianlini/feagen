@@ -142,3 +142,4 @@ class RegexDiGraph(object):
         nx_digraph = self.build_directed_graph(keys, root_node_name)
         nx_digraph.reverse(copy=False)
         draw_dag(nx_digraph, path)
+        return nx_digraph

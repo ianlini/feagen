@@ -3,7 +3,10 @@ import argparse
 
 import yaml
 
-from .config import get_data_generator_class_from_config
+from .config import (
+    get_data_generator_class_from_config,
+    get_data_generator_from_config,
+)
 from ..bundling import get_data_keys_from_structure
 
 
@@ -29,6 +32,10 @@ def draw_dag(argv=sys.argv[1:]):
         global_config = yaml.load(fp)
     with open(args.bundle_config) as fp:
         bundle_config = yaml.load(fp)
-    generator_class = get_data_generator_class_from_config(global_config)
     data_keys = get_data_keys_from_structure(bundle_config['structure'])
-    generator_class.draw_dag(args.dag_output_path, data_keys)
+    if args.involved:
+        data_generator = get_data_generator_from_config(global_config)
+        data_generator.draw_involved_dag(args.dag_output_path, data_keys)
+    else:
+        generator_class = get_data_generator_class_from_config(global_config)
+        generator_class.draw_dag(args.dag_output_path, data_keys)

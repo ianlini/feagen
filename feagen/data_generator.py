@@ -90,6 +90,12 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
         data = handler.get(key)[key]
         return data
 
+    def build_involved_dag(self):
+        pass
+
+    def draw_involved_dag(self):
+        pass
+
     def _get_upstream_data(self, dag, node):
         data = {}
         for source, _, attr in dag.in_edges_iter(node, data=True):
@@ -185,7 +191,9 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
     @classmethod
     def draw_dag(cls, path, data_keys):
         # pylint: disable=protected-access
-        cls._dag.draw(path, data_keys, root_node_name='generate')
+        dag = cls._dag.draw(path, data_keys, root_node_name='generate')
+        if not nx.is_directed_acyclic_graph(dag):
+            print("Warning! The graph is not acyclic!")
 
 
 class FeatureGenerator(DataGenerator):
