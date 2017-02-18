@@ -41,11 +41,16 @@ class RegexDiGraph(object):
     """
 
     def __init__(self):
-        self._key_attr_dict = {}
+        self._key_node_dict = {}
+        self._node_attr_dict = {}
         self._nx_dag = nx.DiGraph()
 
-    def add_node(self, keys=(), re_escape_keys=(), attrs=None):
+    def add_node(self, name, keys=(), re_escape_keys=(), attr=None):
         # pylint: disable=protected-access
+        if name in self._node_attr_dict:
+            raise ValueError("duplicated node name '{}' for {} and {}"
+                             .format(name, self._node_attr_dict[name], attr))
+        self._node_attr_dict[name] = attr
         if isinstance(keys, basestring):
             keys = (keys,)
         if isinstance(re_escape_keys, basestring):
@@ -53,13 +58,13 @@ class RegexDiGraph(object):
         re_escape_keys = map(re.escape, re_escape_keys)
         keys = list(keys) + list(re_escape_keys)
         if len(keys) == 0:
-            raise ValueError("keys and re_escape_keys for {} cannot be both "
-                             "empty.".format(attrs))
+            raise ValueError("keys and re_escape_keys for {} are both empty."
+                             .format(name))
         for key in keys:
-            if key in self._key_attr_dict:
+            if key in self._key_node_dict:
                 raise ValueError("duplicated data key '{}' for {} and {}"
-                                 .format(key, self._key_attr_dict[key], attrs))
-            self._key_attr_dict[key] = attrs
+                                 .format(key, self._key_node_dict[key], name))
+            self._key_node_dict[key] = name
 
     def get_node_keys_dict(self, data_keys):
         node_keys_dict = defaultdict(list)
@@ -77,33 +82,60 @@ class RegexDiGraph(object):
         if not nx.is_directed_acyclic_graph(self._nx_dag):
             raise ValueError("The dependency graph has cycle.")
 
-    def __getitem__(self, key):
+    def match_node(self, key):
         found_node = None
-        found_key = None
-        for regex_key, node in six.viewitems(self._data_key_node_dict):
-            if re.match("(%s)$" % regex_key, key) is not None:
+        for regex_key, node in six.viewitems(self._key_node_dict):
+            match_object = re.match("(?:%s)\Z" % regex_key, key)
+            if match_object is not None:
                 if found_node is None:
                     found_node = node
-                    found_key = regex_key
+                    found_regex_key = regex_key
+                    found_match_object = match_object
                 else:
                     raise ValueError("The data key '{}' matches multiple keys: "
-                                     "'{}' in {} and '{}' in {}.".format(
-                                         key, found_key, found_node,
+                                     "'{}' for {} and '{}' for {}.".format(
+                                         key, found_regex_key, found_node,
                                          regex_key, node))
         if found_node is None:
             raise KeyError(key)
-        return found_node
+        return found_regex_key, found_node, found_match_object
 
     def get_node_attr(self, key):
         node = self[key]
         node_attr = self._nx_dag.node[node]
         return node_attr
 
-    def draw(self, path):
-        draw_dag(self._nx_dag, path)
-
     def get_subgraph_with_ancestors(self, nodes):
         subgraph_nodes = set(nodes)
         for node in nodes:
             subgraph_nodes |= nx.ancestors(self._nx_dag, node)
         return self._nx_dag.subgraph(subgraph_nodes)
+
+    def _grow_ancestors(self, nx_digraph, root_node_name, successor_keys):
+        # grow the graph using DFS
+        for key in successor_keys:
+            regex_key, node, match_object = self.match_node(key)
+            attr = self._node_attr_dict[node]
+            if node not in nx_digraph:
+                nx_digraph.add_node(node, attr)
+            if not nx_digraph.has_edge(root_node_name, node):
+                nx_digraph.add_edge(root_node_name, node, keys=set())
+            edge_attr = nx_digraph[root_node_name][node]
+            if key in edge_attr['keys']:
+                continue
+            edge_attr['keys'].add(key)
+            re_args = match_object.groupdict()
+            node_successor_keys = map(lambda k: k.format(**re_args),
+                                      attr['require'])
+            self._grow_ancestors(nx_digraph, node, node_successor_keys)
+
+    def build_directed_graph(self, data_keys, root_node_name='root'):
+        nx_digraph = nx.DiGraph()
+        nx_digraph.add_node(root_node_name)
+        self._grow_ancestors(nx_digraph, root_node_name, data_keys)
+        return nx_digraph
+
+    def draw(self, path, data_keys, root_node_name='root', reverse=False):
+        nx_digraph = self.build_directed_graph(data_keys, root_node_name)
+        nx_digraph.reverse(copy=False)
+        draw_dag(nx_digraph, path)

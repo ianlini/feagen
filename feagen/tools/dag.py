@@ -4,6 +4,7 @@ import argparse
 import yaml
 
 from .config import get_data_generator_class_from_config
+from ..bundling import get_data_keys_from_structure
 
 
 def draw_dag(argv=sys.argv[1:]):
@@ -13,6 +14,10 @@ def draw_dag(argv=sys.argv[1:]):
                         default=".feagenrc/config.yml",
                         help="the path of the path configuration YAML file "
                              "(default: .feagenrc/config.yml)")
+    parser.add_argument('-b', '--bundle-config',
+                        default=".feagenrc/bundle_config.yml",
+                        help="the path of the bundle configuration YAML file "
+                             "(default: .feagenrc/bundle_config.yml)")
     parser.add_argument('-d', '--dag-output-path',
                         default="dag.png",
                         help="output image path (default: dag.png)")
@@ -22,5 +27,8 @@ def draw_dag(argv=sys.argv[1:]):
     args = parser.parse_args(argv)
     with open(args.global_config) as fp:
         global_config = yaml.load(fp)
+    with open(args.bundle_config) as fp:
+        bundle_config = yaml.load(fp)
     generator_class = get_data_generator_class_from_config(global_config)
-    generator_class.draw_dag(args.dag_output_path)
+    data_keys = get_data_keys_from_structure(bundle_config['structure'])
+    generator_class.draw_dag(args.dag_output_path, data_keys)

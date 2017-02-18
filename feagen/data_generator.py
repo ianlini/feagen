@@ -28,22 +28,22 @@ class FeatureGeneratorType(type):
         # build the dynamic DAG
         handler_set = set()
         for function_name, function in attrs:
-            mode = function._feagen_will_generate['mode']
-            will_generate_keys = function._feagen_will_generate['keys']
-            node_attrs = {'func_name': function_name}
-            node_attrs.update(function._feagen_will_generate)
+            node_attrs = function._feagen_will_generate
+            del function.__dict__['_feagen_will_generate']
+            handler_set.add(node_attrs['handler'])
             if hasattr(function, '_feagen_require'):
                 node_attrs['require'] = function._feagen_require
                 del function.__dict__['_feagen_require']
-            if mode == 'one':
-                dag.add_node(will_generate_keys, attrs=node_attrs)
-            elif mode == 'full':
-                dag.add_node(re_escape_keys=will_generate_keys,
-                             attrs=node_attrs)
             else:
-                raise ValueError('Mode {} is not supported'.format(mode))
-            handler_set.add(function._feagen_will_generate['handler'])
-            del function.__dict__['_feagen_will_generate']
+                node_attrs['require'] = ()
+            if node_attrs['mode'] == 'one':
+                dag.add_node(function_name, node_attrs['keys'], attr=node_attrs)
+            elif node_attrs['mode'] == 'full':
+                dag.add_node(function_name, re_escape_keys=node_attrs['keys'],
+                             attr=node_attrs)
+            else:
+                raise ValueError('Mode {} is not supported'
+                                 .format(node_attrs['mode']))
 
         cls._dag = dag
         cls._handler_set = handler_set
@@ -178,8 +178,9 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
         return involved_dag
 
     @classmethod
-    def draw_dag(cls, path):
-        cls._dag.draw(path)  # pylint: disable=protected-access
+    def draw_dag(cls, path, data_keys):
+        # pylint: disable=protected-access
+        cls._dag.draw(path, data_keys, root_node_name='generate')
 
 
 class FeatureGenerator(DataGenerator):
