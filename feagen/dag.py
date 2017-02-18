@@ -43,9 +43,11 @@ class RegexDiGraph(object):
     def __init__(self):
         self._key_node_dict = {}
         self._node_attr_dict = {}
+        self._node_succesor_dict = {}
         self._nx_dag = nx.DiGraph()
 
-    def add_node(self, name, keys=(), re_escape_keys=(), attr=None):
+    def add_node(self, name, keys=(), re_escape_keys=(), successor_keys=(),
+                 attr=None):
         # pylint: disable=protected-access
         if name in self._node_attr_dict:
             raise ValueError("duplicated node name '{}' for {} and {}"
@@ -65,6 +67,7 @@ class RegexDiGraph(object):
                 raise ValueError("duplicated data key '{}' for {} and {}"
                                  .format(key, self._key_node_dict[key], name))
             self._key_node_dict[key] = name
+        self._node_succesor_dict[name] = successor_keys
 
     def get_node_keys_dict(self, data_keys):
         node_keys_dict = defaultdict(list)
@@ -126,16 +129,16 @@ class RegexDiGraph(object):
             edge_attr['keys'].add(key)
             re_args = match_object.groupdict()
             node_successor_keys = map(lambda k: k.format(**re_args),
-                                      attr['require'])
+                                      self._node_succesor_dict[node])
             self._grow_ancestors(nx_digraph, node, node_successor_keys)
 
-    def build_directed_graph(self, data_keys, root_node_name='root'):
+    def build_directed_graph(self, keys, root_node_name='root'):
         nx_digraph = nx.DiGraph()
         nx_digraph.add_node(root_node_name)
-        self._grow_ancestors(nx_digraph, root_node_name, data_keys)
+        self._grow_ancestors(nx_digraph, root_node_name, keys)
         return nx_digraph
 
-    def draw(self, path, data_keys, root_node_name='root', reverse=False):
-        nx_digraph = self.build_directed_graph(data_keys, root_node_name)
+    def draw(self, path, keys, root_node_name='root', reverse=False):
+        nx_digraph = self.build_directed_graph(keys, root_node_name)
         nx_digraph.reverse(copy=False)
         draw_dag(nx_digraph, path)

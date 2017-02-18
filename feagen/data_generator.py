@@ -37,9 +37,14 @@ class FeatureGeneratorType(type):
             else:
                 node_attrs['require'] = ()
             if node_attrs['mode'] == 'one':
-                dag.add_node(function_name, node_attrs['keys'], attr=node_attrs)
+                dag.add_node(function_name,
+                             keys=node_attrs['keys'],
+                             successor_keys=node_attrs['require'],
+                             attr=node_attrs)
             elif node_attrs['mode'] == 'full':
-                dag.add_node(function_name, re_escape_keys=node_attrs['keys'],
+                dag.add_node(function_name,
+                             re_escape_keys=node_attrs['keys'],
+                             successor_keys=node_attrs['require'],
                              attr=node_attrs)
             else:
                 raise ValueError('Mode {} is not supported'
