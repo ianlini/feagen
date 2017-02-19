@@ -1,6 +1,5 @@
 from os.path import dirname
 import re
-from collections import defaultdict
 from past.builtins import basestring
 
 import six
@@ -75,22 +74,6 @@ class RegexDiGraph(object):
         self._node_succesor_dict[name] = tuple(sorted(set(successor_keys)))
         self._node_mode_dict[name] = mode
 
-    def get_node_keys_dict(self, data_keys):
-        node_keys_dict = defaultdict(list)
-        for data_key in data_keys:
-            node_keys_dict[self[data_key]].append(data_key)
-        return node_keys_dict
-
-    def add_edges_from(self, requirements):
-        edges = []
-        for function_name, function_requirements in requirements:
-            node_keys_dict = self.get_node_keys_dict(function_requirements)
-            for source_node, data_keys in six.viewitems(node_keys_dict):
-                edges.append((source_node, function_name, {'keys': data_keys}))
-        self._nx_dag.add_edges_from(edges)
-        if not nx.is_directed_acyclic_graph(self._nx_dag):
-            raise ValueError("The dependency graph has cycle.")
-
     def match_node(self, key):
         found_node = None
         for regex_key, node in six.viewitems(self._key_node_dict):
@@ -110,8 +93,8 @@ class RegexDiGraph(object):
         return found_regex_key, found_node, found_match_object
 
     def get_node_attr(self, key):
-        node = self[key]
-        node_attr = self._nx_dag.node[node]
+        regex_key, node, match_object = self.match_node(key)
+        node_attr = self._node_attr_dict[node]
         return node_attr
 
     def get_subgraph_with_ancestors(self, nodes):
@@ -120,9 +103,11 @@ class RegexDiGraph(object):
             subgraph_nodes |= nx.ancestors(self._nx_dag, node)
         return self._nx_dag.subgraph(subgraph_nodes)
 
-    def _grow_ancestors(self, nx_digraph, root_node_key, successor_keys):
+    def _grow_ancestors(self, nx_digraph, root_node_key, successor_keys,
+                        re_args={}):
+        successor_keys = {k: k.format(**re_args) for k in successor_keys}
         # grow the graph using DFS
-        for key in successor_keys:
+        for template_key, key in six.viewitems(successor_keys):
             regex_key, node, match_object = self.match_node(key)
 
             # for merging node, we use key as the 'key' in nx_digraph
@@ -132,23 +117,22 @@ class RegexDiGraph(object):
             elif mode == 'one':
                 node_key = key
             else:
-                raise ValueError('Mode {} is not supported'
-                                 .format(mode))
+                raise ValueError("Mode '%s' is not supported." % mode)
 
+            re_args = match_object.groupdict()
             if node_key not in nx_digraph:
                 attr = self._node_attr_dict[node].copy()
                 attr.setdefault('__name__', node)
+                attr['__re_args__'] = re_args
                 nx_digraph.add_node(node_key, attr)
+                self._grow_ancestors(nx_digraph, node_key,
+                                     self._node_succesor_dict[node], re_args)
             if not nx_digraph.has_edge(root_node_key, node_key):
-                nx_digraph.add_edge(root_node_key, node_key, keys=set())
+                nx_digraph.add_edge(root_node_key, node_key,
+                                    keys=set(), template_keys={})
             edge_attr = nx_digraph[root_node_key][node_key]
-            if key in edge_attr['keys']:
-                continue
             edge_attr['keys'].add(key)
-            re_args = match_object.groupdict()
-            node_successor_keys = map(lambda k: k.format(**re_args),
-                                      self._node_succesor_dict[node])
-            self._grow_ancestors(nx_digraph, node_key, node_successor_keys)
+            edge_attr['template_keys'].update(((template_key, key),))
 
     def build_directed_graph(self, keys, root_node_key='root'):
         nx_digraph = nx.DiGraph()

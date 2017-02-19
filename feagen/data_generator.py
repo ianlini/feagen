@@ -49,8 +49,8 @@ class FeatureGeneratorType(type):
                              attr=node_attrs,
                              mode='full')
             else:
-                raise ValueError('Mode {} is not supported'
-                                 .format(node_attrs['mode']))
+                raise ValueError("Mode '%s' is not supported."
+                                 % node_attrs['mode'])
 
         cls._dag = dag
         cls._handler_set = handler_set
@@ -89,7 +89,7 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
     def get(self, key):
         node_attr = self._dag.get_node_attr(key)
         handler = self._handlers[node_attr['handler']]
-        data = handler.get(key)[key]
+        data = handler.get(key)
         return data
 
     def _dag_prune_can_skip(self, nx_digraph, generation_order):
@@ -115,30 +115,39 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
                         node_attr['skipped'] = False
 
     def build_involved_dag(self, data_keys):
+        # get the nodes and edges that will be considered during the generation
         involved_dag = self._dag.build_directed_graph(data_keys,
                                                       root_node_key='generate')
         involved_dag.reverse(copy=False)
         generation_order = nx.topological_sort(involved_dag)[:-1]
         involved_dag.node['generate']['skipped'] = False
         self._dag_prune_can_skip(involved_dag, generation_order)
-        return involved_dag
+        return involved_dag, generation_order
 
     def draw_involved_dag(self, path, data_keys):
-        involved_dag = self.build_involved_dag(data_keys)
+        involved_dag, _ = self.build_involved_dag(data_keys)
         draw_dag(involved_dag, path)
 
     def _get_upstream_data(self, dag, node):
         data = {}
-        for source, _, attr in dag.in_edges_iter(node, data=True):
-            source_handler = self._handlers[dag.node[source]['handler']]
-            data.update(source_handler.get(attr['keys']))
+        for source, _, edge_attr in dag.in_edges_iter(node, data=True):
+            source_attr = dag.node[source]
+            source_handler = self._handlers[source_attr['handler']]
+            formatted_key_data = source_handler.get(edge_attr['keys'])
+            # change the key to template
+            data.update({template_key: formatted_key_data[key]
+                         for template_key, key in six.viewitems(
+                             edge_attr['template_keys'])})
         return data
 
-    def _generate_one(self, dag, node, handler_key, will_generate_keys, mode,
-                      handler_kwargs):
+    def _generate_one(self, dag, node, func_name, handler_key, handler_kwargs,
+                      re_args, mode):
         if mode == 'one':
-            will_generate_key = will_generate_keys
-            will_generate_keys = (will_generate_key,)
+            will_generate_keys = (node,)
+        elif mode == 'full':
+            will_generate_keys = node
+        else:
+            raise ValueError("Mode '%s' is not supported." % mode)
         handler = self._handlers[handler_key]
         data = self._get_upstream_data(dag, node)
         function_kwargs = handler.get_function_kwargs(
@@ -147,9 +156,11 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
             **handler_kwargs
         )
         if mode == 'one':
-            function_kwargs['will_generate_key'] = will_generate_key
-        function = getattr(self, node)
-        result_dict = _run_function(function, handler_key, will_generate_keys,
+            function_kwargs['will_generate_key'] = node
+        if len(re_args) > 0:
+            function_kwargs['re_args'] = re_args
+        function = getattr(self, func_name)
+        result_dict = _run_function(function, handler_key, node,
                                     function_kwargs)
         _check_result_dict_type(result_dict, node)
         handler.check_result_dict_keys(result_dict, will_generate_keys, node,
@@ -159,39 +170,17 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
     def generate(self, data_keys):
         if isinstance(data_keys, basestring):
             data_keys = (data_keys,)
-
-        # get the nodes ad edges that should be considered during the generation
-        node_keys_dict = self._dag.get_node_keys_dict(data_keys)
-        involved_dag = self._dag.get_subgraph_with_ancestors(
-            six.viewkeys(node_keys_dict))
-        edges = []
-        for source_node, data_keys in six.viewitems(node_keys_dict):
-            edges.append((source_node, 'generate',
-                          {'keys': list(set(data_keys))}))
-        involved_dag.add_edges_from(edges)
-        generation_order = nx.topological_sort(involved_dag)[:-1]
-        self._dag_prune_can_skip(involved_dag, generation_order)
+        involved_dag, generation_order = self.build_involved_dag(data_keys)
 
         # generate data
         for node in generation_order:
             node_attr = involved_dag.node[node]
             if node_attr['skipped']:
                 continue
-            mode = node_attr['mode']
-            if mode == 'full':
-                self._generate_one(
-                    involved_dag, node, node_attr['handler'],
-                    node_attr['keys'], mode, node_attr['handler_kwargs'])
-            elif mode == 'one':
-                will_generate_key_set = set()
-                for _, _, attr in involved_dag.out_edges_iter(node, data=True):
-                    will_generate_key_set |= set(attr['keys'])
-                for data_key in will_generate_key_set:
-                    self._generate_one(
-                        involved_dag, node, node_attr['handler'],
-                        data_key, mode, node_attr['handler_kwargs'])
-            else:
-                raise ValueError("Mode '%s' is not supported." % mode)
+            self._generate_one(
+                involved_dag, node, node_attr['func_name'],
+                node_attr['handler'], node_attr['handler_kwargs'],
+                node_attr['__re_args__'], node_attr['mode'])
 
         return involved_dag
 
