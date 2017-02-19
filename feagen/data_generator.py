@@ -162,9 +162,9 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
         function = getattr(self, func_name)
         result_dict = _run_function(function, handler_key, node,
                                     function_kwargs)
-        _check_result_dict_type(result_dict, node)
-        handler.check_result_dict_keys(result_dict, will_generate_keys, node,
-                                       handler_key, **handler_kwargs)
+        _check_result_dict_type(result_dict, func_name)
+        handler.check_result_dict_keys(result_dict, will_generate_keys,
+                                       func_name, handler_key, **handler_kwargs)
         handler.write_data(result_dict)
 
     def generate(self, data_keys, dag_output_path=None):
