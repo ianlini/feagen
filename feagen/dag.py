@@ -18,9 +18,9 @@ def draw_dag(nx_dag, path):
             edge.attr['label'] = edge.attr['keys']
         else:
             edge.attr['label'] = ""
-            if edge.attr['nonskipped_keys'] != "[]":
+            if edge.attr['nonskipped_keys'] != "set()":
                 edge.attr['label'] += edge.attr['nonskipped_keys']
-            if (edge.attr['skipped_keys'] != "[]"
+            if (edge.attr['skipped_keys'] != "set()"
                     and edge.attr['skipped_keys'] is not None):
                 edge.attr['label'] += "(%s skipped)" % edge.attr['skipped_keys']
     for node in agraph.nodes_iter():

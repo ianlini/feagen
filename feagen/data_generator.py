@@ -5,7 +5,7 @@ import six
 import networkx as nx
 from bistiming import SimpleTimer
 
-from .dag import RegexDiGraph
+from .dag import RegexDiGraph, draw_dag
 from .bundling import DataBundlerMixin
 from .data_handlers import (
     MemoryDataHandler,
@@ -31,6 +31,7 @@ class FeatureGeneratorType(type):
             node_attrs = function._feagen_will_generate
             del function.__dict__['_feagen_will_generate']
             handler_set.add(node_attrs['handler'])
+            node_attrs['func_name'] = function_name
             if hasattr(function, '_feagen_require'):
                 node_attrs['require'] = function._feagen_require
                 del function.__dict__['_feagen_require']
@@ -91,11 +92,40 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
         data = handler.get(key)[key]
         return data
 
-    def build_involved_dag(self):
-        pass
+    def _dag_prune_can_skip(self, nx_digraph, generation_order):
+        for node in reversed(generation_order):
+            node_attr = nx_digraph.node[node]
+            handler = self._handlers[node_attr['handler']]
+            node_attr['skipped'] = True
+            for _, target, edge_attr in nx_digraph.out_edges_iter(node,
+                                                                  data=True):
+                if nx_digraph.node[target]['skipped']:
+                    edge_attr['skipped_keys'] = edge_attr['keys']
+                    edge_attr['nonskipped_keys'] = set()
+                else:
+                    required_keys = edge_attr['keys']
+                    edge_attr['skipped_keys'] = set()
+                    edge_attr['nonskipped_keys'] = set()
+                    for required_key in required_keys:
+                        if handler.can_skip(required_key):
+                            edge_attr['skipped_keys'].add(required_key)
+                        else:
+                            edge_attr['nonskipped_keys'].add(required_key)
+                    if len(edge_attr['nonskipped_keys']) > 0:
+                        node_attr['skipped'] = False
 
-    def draw_involved_dag(self):
-        pass
+    def build_involved_dag(self, data_keys):
+        involved_dag = self._dag.build_directed_graph(data_keys,
+                                                      root_node_key='generate')
+        involved_dag.reverse(copy=False)
+        generation_order = nx.topological_sort(involved_dag)[:-1]
+        involved_dag.node['generate']['skipped'] = False
+        self._dag_prune_can_skip(involved_dag, generation_order)
+        return involved_dag
+
+    def draw_involved_dag(self, path, data_keys):
+        involved_dag = self.build_involved_dag(data_keys)
+        draw_dag(involved_dag, path)
 
     def _get_upstream_data(self, dag, node):
         data = {}
@@ -125,30 +155,6 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
         handler.check_result_dict_keys(result_dict, will_generate_keys, node,
                                        handler_key, **handler_kwargs)
         handler.write_data(result_dict)
-
-    def _dag_prune_can_skip(self, involved_dag, generation_order):
-        for node in reversed(generation_order):
-            node_attr = involved_dag.node[node]
-            handler = self._handlers[node_attr['handler']]
-            can_skip_node = True
-            for _, target, edge_attr in involved_dag.out_edges_iter(node,
-                                                                    data=True):
-                if (target != 'generate'
-                        and involved_dag.node[target]['skipped']):
-                    edge_attr['skipped_keys'] = edge_attr['keys']
-                    edge_attr['nonskipped_keys'] = []
-                else:
-                    required_keys = edge_attr['keys']
-                    edge_attr['skipped_keys'] = []
-                    edge_attr['nonskipped_keys'] = []
-                    for required_key in required_keys:
-                        if handler.can_skip(required_key):
-                            edge_attr['skipped_keys'].append(required_key)
-                        else:
-                            edge_attr['nonskipped_keys'].append(required_key)
-                    if len(edge_attr['nonskipped_keys']) > 0:
-                        can_skip_node = False
-            node_attr['skipped'] = True if can_skip_node else False
 
     def generate(self, data_keys):
         if isinstance(data_keys, basestring):
