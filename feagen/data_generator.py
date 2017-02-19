@@ -167,10 +167,12 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
                                        handler_key, **handler_kwargs)
         handler.write_data(result_dict)
 
-    def generate(self, data_keys):
+    def generate(self, data_keys, dag_output_path=None):
         if isinstance(data_keys, basestring):
             data_keys = (data_keys,)
         involved_dag, generation_order = self.build_involved_dag(data_keys)
+        if dag_output_path is not None:
+            draw_dag(involved_dag, dag_output_path)
 
         # generate data
         for node in generation_order:

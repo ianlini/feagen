@@ -32,10 +32,7 @@ def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None,
                          "collections.Mapping object.")
     data_generator = get_data_generator_from_config(global_config)
     data_keys = get_data_keys_from_structure(bundle_config['structure'])
-    involved_dag = data_generator.generate(data_keys)
-
-    if dag_output_path is not None:
-        draw_dag(involved_dag, dag_output_path)
+    data_generator.generate(data_keys, dag_output_path)
 
     if not no_bundle:
         mkdir_p(global_config['data_bundles_dir'])
