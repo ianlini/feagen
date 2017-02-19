@@ -25,8 +25,10 @@ def draw_dag(nx_dag, path):
                 edge.attr['label'] += "(%s skipped)" % edge.attr['skipped_keys']
     for node in agraph.nodes_iter():
         if node.attr['skipped'] == "True":
-            node.attr['label'] = str(node) + " (skipped)"
+            node.attr['label'] = node.attr['__name__'] + " (skipped)"
             node.attr['fontcolor'] = 'grey'
+        else:
+            node.attr['label'] = node.attr['__name__']
     agraph.layout('dot')
     agraph.draw(path)
 
@@ -42,12 +44,14 @@ class RegexDiGraph(object):
 
     def __init__(self):
         self._key_node_dict = {}
+        self._node_key_dict = {}
         self._node_attr_dict = {}
         self._node_succesor_dict = {}
+        self._node_mode_dict = {}
         self._nx_dag = nx.DiGraph()
 
     def add_node(self, name, keys=(), re_escape_keys=(), successor_keys=(),
-                 attr=None):
+                 attr=None, mode='one'):
         # pylint: disable=protected-access
         if name in self._node_attr_dict:
             raise ValueError("duplicated node name '{}' for {} and {}"
@@ -67,7 +71,9 @@ class RegexDiGraph(object):
                 raise ValueError("duplicated data key '{}' for {} and {}"
                                  .format(key, self._key_node_dict[key], name))
             self._key_node_dict[key] = name
-        self._node_succesor_dict[name] = successor_keys
+        self._node_key_dict[name] = tuple(sorted(keys))
+        self._node_succesor_dict[name] = tuple(sorted(set(successor_keys)))
+        self._node_mode_dict[name] = mode
 
     def get_node_keys_dict(self, data_keys):
         node_keys_dict = defaultdict(list)
@@ -114,32 +120,45 @@ class RegexDiGraph(object):
             subgraph_nodes |= nx.ancestors(self._nx_dag, node)
         return self._nx_dag.subgraph(subgraph_nodes)
 
-    def _grow_ancestors(self, nx_digraph, root_node_name, successor_keys):
+    def _grow_ancestors(self, nx_digraph, root_node_key, successor_keys):
         # grow the graph using DFS
         for key in successor_keys:
             regex_key, node, match_object = self.match_node(key)
-            attr = self._node_attr_dict[node]
-            if node not in nx_digraph:
-                nx_digraph.add_node(node, attr)
-            if not nx_digraph.has_edge(root_node_name, node):
-                nx_digraph.add_edge(root_node_name, node, keys=set())
-            edge_attr = nx_digraph[root_node_name][node]
+
+            # for merging node, we use key as the 'key' in nx_digraph
+            mode = self._node_mode_dict[node]
+            if mode == 'full':
+                node_key = self._node_key_dict[node]
+            elif mode == 'one':
+                node_key = key
+            else:
+                raise ValueError('Mode {} is not supported'
+                                 .format(mode))
+
+            if node_key not in nx_digraph:
+                attr = self._node_attr_dict[node].copy()
+                attr.setdefault('__name__', node)
+                nx_digraph.add_node(node_key, attr)
+            if not nx_digraph.has_edge(root_node_key, node_key):
+                nx_digraph.add_edge(root_node_key, node_key, keys=set())
+            edge_attr = nx_digraph[root_node_key][node_key]
             if key in edge_attr['keys']:
                 continue
             edge_attr['keys'].add(key)
             re_args = match_object.groupdict()
             node_successor_keys = map(lambda k: k.format(**re_args),
                                       self._node_succesor_dict[node])
-            self._grow_ancestors(nx_digraph, node, node_successor_keys)
+            self._grow_ancestors(nx_digraph, node_key, node_successor_keys)
 
-    def build_directed_graph(self, keys, root_node_name='root'):
+    def build_directed_graph(self, keys, root_node_key='root'):
         nx_digraph = nx.DiGraph()
-        nx_digraph.add_node(root_node_name)
-        self._grow_ancestors(nx_digraph, root_node_name, keys)
+        nx_digraph.add_node(root_node_key, {'__name__': root_node_key})
+        self._grow_ancestors(nx_digraph, root_node_key, keys)
         return nx_digraph
 
-    def draw(self, path, keys, root_node_name='root', reverse=False):
-        nx_digraph = self.build_directed_graph(keys, root_node_name)
-        nx_digraph.reverse(copy=False)
+    def draw(self, path, keys, root_node_key='root', reverse=False):
+        nx_digraph = self.build_directed_graph(keys, root_node_key)
+        if reverse:
+            nx_digraph.reverse(copy=False)
         draw_dag(nx_digraph, path)
         return nx_digraph

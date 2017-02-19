@@ -45,7 +45,8 @@ class FeatureGeneratorType(type):
                 dag.add_node(function_name,
                              re_escape_keys=node_attrs['keys'],
                              successor_keys=node_attrs['require'],
-                             attr=node_attrs)
+                             attr=node_attrs,
+                             mode='full')
             else:
                 raise ValueError('Mode {} is not supported'
                                  .format(node_attrs['mode']))
@@ -191,7 +192,8 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
     @classmethod
     def draw_dag(cls, path, data_keys):
         # pylint: disable=protected-access
-        dag = cls._dag.draw(path, data_keys, root_node_name='generate')
+        dag = cls._dag.draw(path, data_keys, root_node_key='generate',
+                            reverse=True)
         if not nx.is_directed_acyclic_graph(dag):
             print("Warning! The graph is not acyclic!")
 
