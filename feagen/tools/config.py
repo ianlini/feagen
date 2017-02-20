@@ -1,4 +1,5 @@
 from os.path import join, exists
+from importlib import import_module
 
 from mkdir_p import mkdir_p
 
@@ -56,3 +57,22 @@ structure_config:
     else:
         with open(default_bundle_config_path, "w") as fp:
             fp.write(default_bundle_config)
+
+
+def get_class_from_str(class_str):
+    module_name, class_name = class_str.rsplit(".", 1)
+    module = import_module(module_name)
+    generator_class = getattr(module, class_name)
+    return generator_class
+
+
+def get_data_generator_class_from_config(global_config):
+    # TODO: check the config
+    generator_class = get_class_from_str(global_config['generator_class'])
+    return generator_class
+
+
+def get_data_generator_from_config(global_config):
+    generator_class = get_data_generator_class_from_config(global_config)
+    data_generator = generator_class(**global_config['generator_kwargs'])
+    return data_generator

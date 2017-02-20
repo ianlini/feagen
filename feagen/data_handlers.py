@@ -79,10 +79,10 @@ class H5pyDataHandler(DataHandler):
             return True
         return False
 
-    def get(self, keys):
-        if isinstance(keys, basestring):
-            keys = (keys,)
-        return {key: h5sparse.Group(self.h5f)[key] for key in keys}
+    def get(self, key):
+        if isinstance(key, basestring):
+            return h5sparse.Group(self.h5f)[key]
+        return {k: h5sparse.Group(self.h5f)[k] for k in key}
 
     def get_function_kwargs(self, will_generate_keys, data,
                             manually_create_dataset=False):
@@ -152,10 +152,10 @@ class PandasHDFDataHandler(DataHandler):
             return True
         return False
 
-    def get(self, keys):
-        if isinstance(keys, basestring):
-            keys = (keys,)
-        return {key: self.hdf_store[key] for key in keys}
+    def get(self, key):
+        if isinstance(key, basestring):
+            return self.hdf_store[key]
+        return {k: self.hdf_store[k] for k in key}
 
     def write_data(self, result_dict):
         for key, result in six.iteritems(result_dict):
@@ -188,10 +188,10 @@ class MemoryDataHandler(DataHandler):
             return True
         return False
 
-    def get(self, keys):
-        if isinstance(keys, basestring):
-            keys = (keys,)
-        return {key: self.data[key] for key in keys}
+    def get(self, key):
+        if isinstance(key, basestring):
+            return self.data[key]
+        return {k: self.data[k] for k in key}
 
     def write_data(self, result_dict):
         self.data.update(result_dict)
@@ -209,13 +209,14 @@ class PickleDataHandler(DataHandler):
             return True
         return False
 
-    def get(self, keys):
-        if isinstance(keys, basestring):
-            keys = (keys,)
-        data = {}
-        for key in keys:
+    def get(self, key):
+        if isinstance(key, basestring):
             with open(os.path.join(self.pickle_dir, key + ".pkl"), "rb") as fp:
-                data[key] = cPickle.load(fp)
+                return cPickle.load(fp)
+        data = {}
+        for k in key:
+            with open(os.path.join(self.pickle_dir, k + ".pkl"), "rb") as fp:
+                data[k] = cPickle.load(fp)
         return data
 
     def write_data(self, result_dict):

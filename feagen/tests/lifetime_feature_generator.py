@@ -75,15 +75,11 @@ id,lifetime,tested_age,weight,height,gender,income
         bmi = data_df['weight'] / ((data_df['height'] / 100) ** 2)
         return {'BMI': bmi}
 
-    @require('data_df')
-    @will_generate('h5py', r'\w+_divided_by_\w+', mode='one')
-    def gen_divided_by(self, will_generate_key, data):
-        import re
-        data_df = data['data_df']
-        matched = re.match(r"(?P<data1>\w+)_divided_by_(?P<data2>\w+)",
-                           will_generate_key)
-        division_result = (data_df[matched.group('data1')]
-                           / data_df[matched.group('data2')])
+    @require(('{dividend}', '{divisor}'))
+    @will_generate('h5py', r'(?P<dividend>\w+)_divided_by_(?P<divisor>\w+)',
+                   mode='one')
+    def gen_divided_by(self, will_generate_key, data, re_args):
+        division_result = data['{dividend}'].value / data['{divisor}'].value
         return {will_generate_key: division_result}
 
     @require('data_df')

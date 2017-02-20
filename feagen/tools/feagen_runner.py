@@ -1,19 +1,18 @@
 from os.path import basename, splitext, join
 import sys
 import argparse
-from importlib import import_module
 import collections
 
 import yaml
 from mkdir_p import mkdir_p
 from feagen.dag import draw_dag
 
+from .config import get_data_generator_from_config
 from ..bundling import get_data_keys_from_structure
 
 
 def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None,
                             no_bundle=False):
-    # TODO: check the config
     """Generate feature with configurations.
 
     global_config (collections.Mapping): global configuration
@@ -31,18 +30,9 @@ def feagen_run_with_configs(global_config, bundle_config, dag_output_path=None,
     if not isinstance(bundle_config, collections.Mapping):
         raise ValueError("bundle_config should be a "
                          "collections.Mapping object.")
-
-    module_name, class_name = global_config['generator_class'].rsplit(".", 1)
-    module = import_module(module_name)
-    generator_class = getattr(module, class_name)
-    generator_kwargs = global_config['generator_kwargs']
-    data_generator = generator_class(**generator_kwargs)
-
+    data_generator = get_data_generator_from_config(global_config)
     data_keys = get_data_keys_from_structure(bundle_config['structure'])
-    involved_dag = data_generator.generate(data_keys)
-
-    if dag_output_path is not None:
-        draw_dag(involved_dag, dag_output_path)
+    data_generator.generate(data_keys, dag_output_path)
 
     if not no_bundle:
         mkdir_p(global_config['data_bundles_dir'])

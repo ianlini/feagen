@@ -45,7 +45,7 @@ with open('README.rst') as fp:
 
 setup(
     name='feagen',
-    version="1.0.0a7",
+    version="1.0.0a8",
     description=description,
     long_description=long_description,
     author='Ian Lin',
@@ -58,7 +58,7 @@ setup(
         'console_scripts': [
             'feagen = feagen.tools:feagen_run',
             'feagen-init = feagen.tools:init_config',
-            'feagen-draw-dag = feagen.tools:draw_full_dag',
+            'feagen-draw-dag = feagen.tools:draw_dag',
         ],
     },
     classifiers=[
