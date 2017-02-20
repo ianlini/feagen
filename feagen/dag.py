@@ -17,9 +17,9 @@ def draw_dag(nx_dag, path):
             edge.attr['label'] = edge.attr['keys']
         else:
             edge.attr['label'] = ""
-            if edge.attr['nonskipped_keys'] != "set()":
+            if edge.attr['nonskipped_keys'] not in ["set()", "set([])"]:
                 edge.attr['label'] += edge.attr['nonskipped_keys']
-            if (edge.attr['skipped_keys'] != "set()"
+            if (edge.attr['skipped_keys'] not in ["set()", "set([])"]
                     and edge.attr['skipped_keys'] is not None):
                 edge.attr['label'] += "(%s skipped)" % edge.attr['skipped_keys']
     for node in agraph.nodes_iter():
@@ -47,7 +47,6 @@ class RegexDiGraph(object):
         self._node_attr_dict = {}
         self._node_succesor_dict = {}
         self._node_mode_dict = {}
-        self._nx_dag = nx.DiGraph()
 
     def add_node(self, name, keys=(), re_escape_keys=(), successor_keys=(),
                  attr=None, mode='one'):
@@ -60,6 +59,10 @@ class RegexDiGraph(object):
             keys = (keys,)
         if isinstance(re_escape_keys, basestring):
             re_escape_keys = (re_escape_keys,)
+        self._node_key_dict[name] = {
+            'keys': tuple(sorted(keys)),
+            're_escape_keys': tuple(sorted(re_escape_keys)),
+        }
         re_escape_keys = map(re.escape, re_escape_keys)
         keys = list(keys) + list(re_escape_keys)
         if len(keys) == 0:
@@ -70,7 +73,6 @@ class RegexDiGraph(object):
                 raise ValueError("duplicated data key '{}' for {} and {}"
                                  .format(key, self._key_node_dict[key], name))
             self._key_node_dict[key] = name
-        self._node_key_dict[name] = tuple(sorted(keys))
         self._node_succesor_dict[name] = tuple(sorted(set(successor_keys)))
         self._node_mode_dict[name] = mode
 
@@ -113,7 +115,8 @@ class RegexDiGraph(object):
             # for merging node, we use key as the 'key' in nx_digraph
             mode = self._node_mode_dict[node]
             if mode == 'full':
-                node_key = self._node_key_dict[node]
+                node_key = (self._node_key_dict[node]['keys']
+                            + self._node_key_dict[node]['re_escape_keys'])
             elif mode == 'one':
                 node_key = key
             else:
