@@ -102,8 +102,10 @@ class DataBundlerMixin(object):
                         for data_key in val:
                             data = self.get(data_key)
                             if isinstance(data, h5sparse.Dataset):
-                                new_group = h5sparse.Group(new_group)
-                            new_group.create_dataset(data_key, data=data)
+                                h5sparse.Group(new_group).create_dataset(
+                                    data_key, data=data)
+                            else:
+                                new_group.create_dataset(data_key, data=data)
                 elif isinstance(val, dict):
                     new_group = bundle_h5_group.create_group(key)
                     _bundle_data(structure[key], structure_config.get(key, {}),
