@@ -12,16 +12,16 @@ def get_data_keys_from_structure(structure):
     data_keys = []
 
     def _get_data_keys_from_structure(structure):
-        for _, val in six.viewitems(structure):
-            if isinstance(val, basestring):
-                data_keys.append(val)
-            elif isinstance(val, list):
-                data_keys.extend(val)
-            elif isinstance(val, dict):
+        if isinstance(structure, basestring):
+            data_keys.append(structure)
+        elif isinstance(structure, list):
+            data_keys.extend(structure)
+        elif isinstance(structure, dict):
+            for _, val in six.viewitems(structure):
                 _get_data_keys_from_structure(val)
-            else:
-                raise TypeError("The bundle structure only support "
-                                "dict, list and str.")
+        else:
+            raise TypeError("The bundle structure only support "
+                            "dict, list and str.")
     _get_data_keys_from_structure(structure)
 
     return data_keys
@@ -85,30 +85,28 @@ class DataBundlerMixin(object):
         if structure_config is None:
             structure_config = {}
 
-        def _bundle_data(structure, structure_config, group_name):
-            for key, val in six.viewitems(structure):
-                config = structure_config.get(key, {})
-                if isinstance(val, basestring):
-                    (self.get_handler(val)
-                     .bundle(val, data_bundle_hdf_path, group_name + "/" + key))
-                elif isinstance(val, list):
-                    if config.get('concat', False):
-                        self.fill_concat_data(
-                            data_bundle_hdf_path, group_name + "/" + key,
-                            val, buffer_size)
-                    else:
-                        for data_key in val:
-                            (self.get_handler(data_key)
-                             .bundle(data_key, data_bundle_hdf_path,
-                                     "%s/%s/%s" % (group_name, key, data_key)))
-                elif isinstance(val, dict):
-                    _bundle_data(structure[key], structure_config.get(key, {}),
-                                 group_name + "/" + key)
+        def _bundle_data(structure, structure_config, dset_name=""):
+            if isinstance(structure, basestring) and dset_name != "":
+                (self.get_handler(structure)
+                 .bundle(structure, data_bundle_hdf_path, dset_name))
+            elif isinstance(structure, list):
+                if structure_config.get('concat', False):
+                    self.fill_concat_data(data_bundle_hdf_path, dset_name,
+                                          structure, buffer_size)
                 else:
-                    raise TypeError("The bundle structure only support "
-                                    "dict, list and str.")
+                    for data_key in structure:
+                        (self.get_handler(data_key)
+                         .bundle(data_key, data_bundle_hdf_path,
+                                 dset_name + "/" + data_key))
+            elif isinstance(structure, dict):
+                for key, val in six.viewitems(structure):
+                    _bundle_data(val, structure_config.get(key, {}),
+                                 dset_name + "/" + key)
+            else:
+                raise TypeError("The bundle structure only support "
+                                "dict, list and str (except the first layer).")
 
         if os.path.isfile(data_bundle_hdf_path):
             os.remove(data_bundle_hdf_path)
         with SimpleTimer("Bundling data"):
-            _bundle_data(structure, structure_config, "/")
+            _bundle_data(structure, structure_config)
