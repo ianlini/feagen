@@ -62,8 +62,6 @@ def _run_function(function, handler_key, will_generate_keys, kwargs):
                              function.__name__),
                      end_in_new_line=False):  # pylint: disable=C0330
         result_dict = function(**kwargs)
-    if result_dict is None:
-        result_dict = {}
     return result_dict
 
 
@@ -166,9 +164,15 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
         function = getattr(self, func_name)
         result_dict = _run_function(function, handler_key, node,
                                     function_kwargs)
+
+        if result_dict is None:
+            result_dict = {}
+        elif mode == 'one':
+            result_dict = {node: result_dict}
         _check_result_dict_type(result_dict, func_name)
         handler.check_result_dict_keys(result_dict, will_generate_keys,
-                                       func_name, handler_key, **handler_kwargs)
+                                       func_name, handler_key,
+                                       **handler_kwargs)
         handler.write_data(result_dict)
 
     def generate(self, data_keys, dag_output_path=None):
