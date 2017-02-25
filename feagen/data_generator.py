@@ -86,9 +86,13 @@ class DataGenerator(six.with_metaclass(FeatureGeneratorType, DataBundlerMixin)):
                                      lacked_handlers_set))
         self._handlers = handlers
 
-    def get(self, key):
+    def get_handler(self, key):
         node_attr = self._dag.get_node_attr(key)
         handler = self._handlers[node_attr['handler']]
+        return handler
+
+    def get(self, key):
+        handler = self.get_handler(key)
         data = handler.get(key)
         return data
 
