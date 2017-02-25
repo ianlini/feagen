@@ -65,14 +65,13 @@ class DataHandler(six.with_metaclass(ABCMeta, object)):
     def write_data(self, result_dict):
         pass
 
-    def bundle(self, key, bundle_h5_group, new_key=None):
+    def bundle(self, key, path, new_key):
         """Copy the data to another HDF5 file with new key."""
-        if new_key is None:
-            new_key = key
         data = self.get(key)
-        if ss.isspmatrix(data):
-            bundle_h5_group = h5sparse.Group(bundle_h5_group)
-        bundle_h5_group.create_dataset(new_key, data=data)
+        with h5py.File(path) as h5f:
+            if ss.isspmatrix(data) or isinstance(data, h5sparse.Dataset):
+                h5f = h5sparse.Group(h5f)
+            h5f.create_dataset(new_key, data=data)
 
 
 class H5pyDataHandler(DataHandler):
@@ -147,13 +146,6 @@ class H5pyDataHandler(DataHandler):
                         self.h5f.create_dataset(key, data=result)
         self.h5f.flush()
 
-    def bundle(self, key, bundle_h5_group, new_key=None):
-        """Copy the data to another HDF5 file with new key."""
-        data = self.get(key)
-        if isinstance(data, h5sparse.Dataset):
-            bundle_h5_group = h5sparse.Group(bundle_h5_group)
-        super(H5pyDataHandler, self).bundle(key, bundle_h5_group, new_key)
-
 
 class PandasHDFDataHandler(DataHandler):
 
@@ -193,9 +185,10 @@ class PandasHDFDataHandler(DataHandler):
                 self.hdf_store[key] = result
         self.hdf_store.flush(fsync=True)
 
-    def bundle(self, key, bundle_h5_group, new_key=None):
+    def bundle(self, key, path, new_key):
         """Copy the data to another HDF5 file with new key."""
-        raise NotImplementedError()
+        data = self.get(key)
+        data.to_hdf(path, new_key)
 
 
 class MemoryDataHandler(DataHandler):

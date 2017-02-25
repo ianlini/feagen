@@ -16,8 +16,8 @@ def test_generate_lifetime_features():
     with open(join(config_dir, 'bundle_config.yml')) as fp:
         bundle_config = yaml.load(fp)
 
-    h5py_hdf_path = mkstemp(suffix=".h5")[1]
-    data_bundles_dir = mkdtemp()
+    h5py_hdf_path = mkstemp(prefix="feagen_test_h5py_", suffix=".h5")[1]
+    data_bundles_dir = mkdtemp(prefix="feagen_test_bundle_")
     data_bundle_hdf_path = join(data_bundles_dir, 'default.h5')
 
     global_config['data_bundles_dir'] = data_bundles_dir
