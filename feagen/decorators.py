@@ -14,19 +14,31 @@ def require(data_keys):
     return require_decorator
 
 
-def will_generate(data_handler, will_generate_keys, mode='full',
+def will_generate(data_handler, will_generate_keys, mode=None,
                   **handler_kwargs):
     """The decorator that represents what data keys will be generated.
 
     Parameters
     ==========
-    mode: {'full', 'one'}
-        full: generate all keys in ``will_generate_keys`` in one function call
-        one: only generate one of the keys in ``will_generate_keys`` in one
-             function call
+    mode: {'full', 'one' or None}
+        'full':
+            generate all keys in ``will_generate_keys`` in one function call,
+            and the node function should return a dict
+        'one':
+            only generate one of the keys in ``will_generate_keys`` in one
+            function call
+        None:
+            if ``will_generate_keys`` is a string, then the mode is 'one',
+            'full' otherwise.
     """
     if isinstance(will_generate_keys, basestring):
+        if mode == 'full':
+            raise ValueError("mode='full' has no effect if will_generate_keys"
+                             "is a string.")
         will_generate_keys = (will_generate_keys,)
+        mode = 'one'
+    elif mode is None:
+        mode = 'full'
 
     def will_generate_decorator(func):
         # pylint: disable=protected-access

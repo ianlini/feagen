@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 
 class LifetimeFeatureGenerator(fg.FeatureGenerator):
 
-    @will_generate('memory', 'data_df')
+    @will_generate('memory', ('data_df',))
     def gen_data_df(self):
         csv = StringIO("""\
 id,lifetime,tested_age,weight,height,gender,income
@@ -29,9 +29,9 @@ id,lifetime,tested_age,weight,height,gender,income
 
     @require('data_df')
     @will_generate('h5py', 'label')
-    def gen_label(self, data):
+    def gen_label(self, data, will_generate_key):
         data_df = data['data_df']
-        return {'label': data_df['lifetime']}
+        return data_df['lifetime']
 
     @require('data_df')
     @will_generate('h5py', ['weight', 'height'])
@@ -41,13 +41,14 @@ id,lifetime,tested_age,weight,height,gender,income
 
     @require('data_df')
     @will_generate('memory', 'mem_raw_data')
-    def gen_mem_raw_data(self, data):
+    def gen_mem_raw_data(self, data, will_generate_key):
         data_df = data['data_df']
-        return {'mem_raw_data': data_df[['weight', 'height']].values}
+        return data_df[['weight', 'height']].values
 
     @require('data_df')
     @will_generate('h5py', 'man_raw_data', manually_create_dataset=True)
-    def gen_man_raw_data(self, data, create_dataset_functions):
+    def gen_man_raw_data(self, data, create_dataset_functions,
+                         will_generate_key):
         data_df = data['data_df']
         dset = create_dataset_functions['man_raw_data'](
             shape=(data_df.shape[0], 2))
@@ -64,37 +65,37 @@ id,lifetime,tested_age,weight,height,gender,income
 
     @require('data_df')
     @will_generate('pandas_hdf', 'pd_raw_data')
-    def gen_raw_data_df(self, data):
+    def gen_raw_data_df(self, data, will_generate_key):
         data_df = data['data_df']
-        return {'pd_raw_data': data_df[['weight', 'height']]}
+        return data_df[['weight', 'height']]
 
     @require('data_df')
     @will_generate('h5py', 'BMI')
-    def gen_bmi(self, data):
+    def gen_bmi(self, data, will_generate_key):
         data_df = data['data_df']
         bmi = data_df['weight'] / ((data_df['height'] / 100) ** 2)
-        return {'BMI': bmi}
+        return bmi
 
     @require(('{dividend}', '{divisor}'))
     @will_generate('h5py', r'(?P<dividend>\w+)_divided_by_(?P<divisor>\w+)',
                    mode='one')
     def gen_divided_by(self, will_generate_key, data, re_args):
         division_result = data['{dividend}'].value / data['{divisor}'].value
-        return {will_generate_key: division_result}
+        return division_result
 
     @require('data_df')
     @will_generate('pickle', 'train_test_split')
-    def gen_train_test_split(self, data):
+    def gen_train_test_split(self, data, will_generate_key):
         data_df = data['data_df']
         train_id, test_id = train_test_split(
             data_df.index, test_size=0.5, random_state=0)
-        return {'train_test_split': (train_id, test_id)}
+        return (train_id, test_id)
 
     @require(('data_df', 'train_test_split'))
     @will_generate('h5py', 'is_in_test_set')
-    def gen_is_in_test_set(self, data):
+    def gen_is_in_test_set(self, data, will_generate_key):
         data_df = data['data_df']
         _, test_id = data['train_test_split']
         is_in_test_set = data_df.index.isin(test_id)
         sparse_is_in_test_set = csr_matrix(is_in_test_set[:, np.newaxis])
-        return {'is_in_test_set': sparse_is_in_test_set}
+        return sparse_is_in_test_set
