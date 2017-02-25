@@ -234,5 +234,8 @@ class PickleDataHandler(DataHandler):
 
     def write_data(self, result_dict):
         for key, val in six.viewitems(result_dict):
-            with open(os.path.join(self.pickle_dir, key + ".pkl"), "wb") as fp:
+            pickle_path = os.path.join(self.pickle_dir, key + ".pkl")
+            with SimpleTimer("Writing generated data %s to pickle file" % key,
+                             end_in_new_line=False), \
+                    open(pickle_path, "wb") as fp:
                 cPickle.dump(val, fp, protocol=cPickle.HIGHEST_PROTOCOL)
