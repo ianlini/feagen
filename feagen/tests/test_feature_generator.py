@@ -27,7 +27,7 @@ def test_generate_lifetime_features():
     bundle_config = {
         'name': 'default',
         'structure': {
-            'label': 'label',
+            'label': 'lifetime',
             'test_filters': [
                 'is_in_test_set',
             ],

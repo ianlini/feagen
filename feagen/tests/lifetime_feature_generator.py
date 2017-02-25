@@ -28,8 +28,8 @@ id,lifetime,tested_age,weight,height,gender,income
         return {'data_df': pd.read_csv(csv, index_col='id')}
 
     @require('data_df')
-    @will_generate('h5py', 'label')
-    def gen_label(self, data, will_generate_key):
+    @will_generate('h5py', 'lifetime')
+    def gen_lifetime(self, data, will_generate_key):
         data_df = data['data_df']
         return data_df['lifetime']
 
