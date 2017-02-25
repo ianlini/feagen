@@ -1,9 +1,9 @@
+import os
 from past.builtins import basestring
 
 import numpy as np
 import pandas as pd
 import h5py
-import h5sparse
 import six
 from bistiming import IterTimer, SimpleTimer
 
@@ -29,7 +29,7 @@ def get_data_keys_from_structure(structure):
 
 class DataBundlerMixin(object):
 
-    def fill_concat_data(self, dset_name, data_keys, bundle_h5_group,
+    def fill_concat_data(self, data_bundle_hdf_path, dset_name, data_keys,
                          buffer_size=int(1e+9)):
         data_shapes = []
         for data_key in data_keys:
@@ -49,11 +49,11 @@ class DataBundlerMixin(object):
         n_cols = sum(shape[1] for shape in data_shapes)
         concat_shape = (n_rows, n_cols)
 
-        bundle_h5_group.create_dataset(dset_name, shape=concat_shape,
-                                       dtype=np.float32)
+        h5f = h5py.File(data_bundle_hdf_path)
+        dset = h5f.create_dataset(dset_name, shape=concat_shape,
+                                  dtype=np.float32)
 
         data_d = 0
-        dset = bundle_h5_group[dset_name]
         for data_i, (data_key, data_shape) in enumerate(
                 zip(data_keys, data_shapes)):
             data = self.get(data_key)
@@ -78,42 +78,37 @@ class DataBundlerMixin(object):
 
             data_d += data_shape[1]
 
+        h5f.close()
+
     def bundle(self, structure, data_bundle_hdf_path, buffer_size=int(1e+9),
                structure_config=None):
         if structure_config is None:
             structure_config = {}
 
-        def _bundle_data(structure, structure_config, bundle_h5_group):
+        def _bundle_data(structure, structure_config, group_name):
             for key, val in six.viewitems(structure):
                 config = structure_config.get(key, {})
                 if isinstance(val, basestring):
-                    data = self.get(val)
-                    if isinstance(data, h5sparse.Dataset):
-                        h5_group = h5sparse.Group(bundle_h5_group)
-                    else:
-                        h5_group = bundle_h5_group
-                    h5_group.create_dataset(key, data=data)
+                    (self.get_handler(val)
+                     .bundle(val, data_bundle_hdf_path, group_name + "/" + key))
                 elif isinstance(val, list):
                     if config.get('concat', False):
-                        self.fill_concat_data(key, val, bundle_h5_group,
-                                              buffer_size)
+                        self.fill_concat_data(
+                            data_bundle_hdf_path, group_name + "/" + key,
+                            val, buffer_size)
                     else:
-                        new_group = bundle_h5_group.create_group(key)
                         for data_key in val:
-                            data = self.get(data_key)
-                            if isinstance(data, h5sparse.Dataset):
-                                h5sparse.Group(new_group).create_dataset(
-                                    data_key, data=data)
-                            else:
-                                new_group.create_dataset(data_key, data=data)
+                            (self.get_handler(data_key)
+                             .bundle(data_key, data_bundle_hdf_path,
+                                     "%s/%s/%s" % (group_name, key, data_key)))
                 elif isinstance(val, dict):
-                    new_group = bundle_h5_group.create_group(key)
                     _bundle_data(structure[key], structure_config.get(key, {}),
-                                 new_group)
+                                 group_name + "/" + key)
                 else:
                     raise TypeError("The bundle structure only support "
                                     "dict, list and str.")
 
-        with h5py.File(data_bundle_hdf_path, 'w') as data_bundle_h5f, \
-                SimpleTimer("Bundling data"):
-            _bundle_data(structure, structure_config, data_bundle_h5f)
+        if os.path.isfile(data_bundle_hdf_path):
+            os.remove(data_bundle_hdf_path)
+        with SimpleTimer("Bundling data"):
+            _bundle_data(structure, structure_config, "/")

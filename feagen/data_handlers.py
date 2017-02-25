@@ -65,6 +65,14 @@ class DataHandler(six.with_metaclass(ABCMeta, object)):
     def write_data(self, result_dict):
         pass
 
+    def bundle(self, key, path, new_key):
+        """Copy the data to another HDF5 file with new key."""
+        data = self.get(key)
+        with h5py.File(path) as h5f:
+            if ss.isspmatrix(data) or isinstance(data, h5sparse.Dataset):
+                h5f = h5sparse.Group(h5f)
+            h5f.create_dataset(new_key, data=data)
+
 
 class H5pyDataHandler(DataHandler):
 
@@ -117,7 +125,7 @@ class H5pyDataHandler(DataHandler):
 
     def write_data(self, result_dict):
         for key, result in six.iteritems(result_dict):
-            if isinstance(result, ss.spmatrix):
+            if ss.isspmatrix(result):
                 if np.isnan(result.data).any():
                     raise ValueError("data {} have nan".format(key))
             elif np.isnan(result).any():
@@ -176,6 +184,11 @@ class PandasHDFDataHandler(DataHandler):
                              end_in_new_line=False):
                 self.hdf_store[key] = result
         self.hdf_store.flush(fsync=True)
+
+    def bundle(self, key, path, new_key):
+        """Copy the data to another HDF5 file with new key."""
+        data = self.get(key)
+        data.to_hdf(path, new_key)
 
 
 class MemoryDataHandler(DataHandler):
