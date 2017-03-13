@@ -1,4 +1,5 @@
 from os.path import join, exists
+import sys
 from importlib import import_module
 
 from mkdir_p import mkdir_p
@@ -61,7 +62,9 @@ structure_config:
 
 def get_class_from_str(class_str):
     module_name, class_name = class_str.rsplit(".", 1)
+    sys.path.insert(0, '')
     module = import_module(module_name)
+    sys.path.pop(0)
     generator_class = getattr(module, class_name)
     return generator_class
 
