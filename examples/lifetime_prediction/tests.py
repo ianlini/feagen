@@ -1,7 +1,6 @@
-import os
 from os.path import abspath, dirname, join
 from shutil import rmtree
-from tempfile import mkdtemp, mkstemp
+from tempfile import mkdtemp
 
 from feagen.bundling import get_data_keys_from_structure
 from feagen.tools.feagen_runner import feagen_run_with_configs
@@ -16,9 +15,9 @@ def test_generate_lifetime_features():
     with open(join(config_dir, 'bundle_config.yml')) as fp:
         bundle_config = yaml.load(fp)
 
-    h5py_hdf_path = mkstemp(prefix="feagen_test_h5py_", suffix=".h5")[1]
-    data_bundles_dir = mkdtemp(prefix="feagen_test_bundle_")
-    data_bundle_hdf_path = join(data_bundles_dir, 'default.h5')
+    test_output_dir = mkdtemp(prefix="feagen_test_output_")
+    h5py_hdf_path = join(test_output_dir, "h5py.h5")
+    data_bundles_dir = join(test_output_dir, "data_bundles")
 
     global_config['data_bundles_dir'] = data_bundles_dir
     global_config['generator_class'] = ("examples.lifetime_prediction."
@@ -31,6 +30,7 @@ def test_generate_lifetime_features():
 
     feagen_run_with_configs(global_config, bundle_config)
 
+    data_bundle_hdf_path = join(data_bundles_dir, 'default.h5')
     with h5py.File(h5py_hdf_path, "r") as global_data_h5f, \
             h5py.File(data_bundle_hdf_path, "r") as data_bundle_h5f:
         assert (set(global_data_h5f)
@@ -40,5 +40,4 @@ def test_generate_lifetime_features():
         assert set(data_bundle_h5f['test_filters']) == {'is_in_test_set'}
         assert data_bundle_h5f['features'].shape == (6, 4)
 
-    os.remove(h5py_hdf_path)
-    rmtree(data_bundles_dir)
+    rmtree(test_output_dir)
