@@ -69,13 +69,12 @@ id,lifetime,tested_age,weight,height,gender,income
         data_df = data['data_df']
         return data_df[['weight', 'height']]
 
-    @require('data_df')
+    @require('pd_raw_data')
     @will_generate('pandas_hdf', 'pd_raw_data_append', manually_append=True)
     def gen_raw_data_append_df(self, data, will_generate_key, append_functions):
-        append_functions[will_generate_key](data['data_df']
-                                            .iloc[:3][['weight', 'height']])
-        append_functions[will_generate_key](data['data_df']
-                                            .iloc[3:][['weight', 'height']])
+        df = data['pd_raw_data']()
+        append_functions[will_generate_key](df.iloc[:3])
+        append_functions[will_generate_key](df.iloc[3:])
 
     @require('data_df')
     @will_generate('h5py', 'BMI')

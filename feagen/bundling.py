@@ -33,7 +33,10 @@ class DataBundlerMixin(object):
                          buffer_size=int(1e+9)):
         data_shapes = []
         for data_key in data_keys:
-            data_shape = self.get(data_key).shape
+            data = self.get(data_key)
+            if hasattr(data, '__call__'):
+                data = data()
+            data_shape = data.shape
             if len(data_shape) == 1:
                 data_shape += (1,)
             data_shapes.append(data_shape)
@@ -57,6 +60,8 @@ class DataBundlerMixin(object):
         for data_i, (data_key, data_shape) in enumerate(
                 zip(data_keys, data_shapes)):
             data = self.get(data_key)
+            if hasattr(data, '__call__'):
+                data = data()
             if isinstance(data, pd.DataFrame):
                 data = data.values
             batch_size = buffer_size // (data.dtype.itemsize * data_shape[1])
