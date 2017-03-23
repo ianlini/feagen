@@ -165,6 +165,32 @@ class PandasHDFDataHandler(DataHandler):
             return self.hdf_store[key]
         return {k: self.hdf_store[k] for k in key}
 
+    def get_function_kwargs(self, will_generate_keys, data,
+                            manually_append=False):
+        kwargs = {}
+        if len(data) > 0:
+            kwargs['data'] = data
+        if manually_append is True:
+            kwargs['append_functions'] = {
+                k: partial(self.hdf_store.append, k)
+                for k in will_generate_keys
+            }
+        return kwargs
+
+    def check_result_dict_keys(self, result_dict, will_generate_keys,
+                               function_name, handler_key,
+                               manually_append=False):
+        will_generate_key_set = set(will_generate_keys)
+        result_dict_key_set = set(result_dict.keys())
+        if manually_append:
+            check_redundant_keys(result_dict_key_set, will_generate_key_set,
+                                 function_name, handler_key)
+            # TODO: check all the datasets is either manually created or in
+            #       result_dict_key_set
+        else:
+            check_exact_match_keys(result_dict_key_set, will_generate_key_set,
+                                   function_name, handler_key)
+
     def write_data(self, result_dict):
         for key, result in six.iteritems(result_dict):
             is_null = False
