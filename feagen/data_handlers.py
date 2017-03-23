@@ -182,7 +182,7 @@ class PandasHDFDataHandler(DataHandler):
             with SimpleTimer("Writing generated data {} to hdf5 file"
                              .format(key),
                              end_in_new_line=False):
-                self.hdf_store[key] = result
+                self.hdf_store.put(key, result, format='table')
         self.hdf_store.flush(fsync=True)
 
     def bundle(self, key, path, new_key):

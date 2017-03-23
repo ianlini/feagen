@@ -1,6 +1,5 @@
-import os
 from os.path import join
-from tempfile import mkstemp, mkdtemp
+from tempfile import mkdtemp
 from shutil import rmtree
 
 import h5py
@@ -8,10 +7,11 @@ from feagen.tools.feagen_runner import feagen_run_with_configs
 
 
 def test_generate_lifetime_features():
-    h5py_hdf_path = mkstemp(prefix="feagen_test_h5py_", suffix=".h5")[1]
-    pandas_hdf_path = mkstemp(prefix="feagen_test_pandas_", suffix=".h5")[1]
-    pickle_dir = mkdtemp(prefix="feagen_test_pickle_")
-    data_bundles_dir = mkdtemp(prefix="feagen_test_bundle_")
+    test_output_dir = mkdtemp(prefix="feagen_test_output_")
+    h5py_hdf_path = join(test_output_dir, "h5py.h5")
+    pandas_hdf_path = join(test_output_dir, "pandas.h5")
+    pickle_dir = join(test_output_dir, "pickle")
+    data_bundles_dir = join(test_output_dir, "data_bundles")
 
     global_config = {
         'generator_class': 'feagen.tests.lifetime_feature_generator'
@@ -72,7 +72,4 @@ def test_generate_lifetime_features():
                 == set(bundle_config['structure']['test_dict']['comparison']))
         assert data_bundle_h5f['features'].shape == (6, 12)
 
-    os.remove(h5py_hdf_path)
-    os.remove(pandas_hdf_path)
-    rmtree(pickle_dir)
-    rmtree(data_bundles_dir)
+    rmtree(test_output_dir)
