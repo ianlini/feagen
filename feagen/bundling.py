@@ -33,10 +33,7 @@ class DataBundlerMixin(object):
                          buffer_size=int(1e+9)):
         data_shapes = []
         for data_key in data_keys:
-            data = self.get(data_key)
-            if hasattr(data, '__call__'):
-                data = data()
-            data_shape = data.shape
+            data_shape = self.get(data_key).shape
             if len(data_shape) == 1:
                 data_shape += (1,)
             data_shapes.append(data_shape)
@@ -60,8 +57,6 @@ class DataBundlerMixin(object):
         for data_i, (data_key, data_shape) in enumerate(
                 zip(data_keys, data_shapes)):
             data = self.get(data_key)
-            if hasattr(data, '__call__'):
-                data = data()
             if isinstance(data, pd.DataFrame):
                 data = data.values
             batch_size = buffer_size // (data.dtype.itemsize * data_shape[1])
@@ -76,6 +71,8 @@ class DataBundlerMixin(object):
                     timer.update(batch_start)
                     batch_end = min(data_shape[0], batch_start + batch_size)
                     data_buffer = data[batch_start: batch_end]
+                    if isinstance(data_buffer, pd.DataFrame):
+                        data_buffer.values
                     if len(data_buffer.shape) == 1:
                         data_buffer = data_buffer[:, np.newaxis]
                     dset[batch_start: batch_end,

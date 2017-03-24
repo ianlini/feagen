@@ -13,6 +13,8 @@ import scipy.sparse as ss
 import six
 from six.moves import cPickle
 
+from .pandas_hdf import PandasHDFDataset
+
 
 SPARSE_FORMAT_SET = set(['csr', 'csc'])
 
@@ -162,8 +164,8 @@ class PandasHDFDataHandler(DataHandler):
 
     def get(self, key):
         if isinstance(key, basestring):
-            return partial(self.hdf_store.select, key)
-        return {k: partial(self.hdf_store.select, k) for k in key}
+            return PandasHDFDataset(self.hdf_store, key)
+        return {k: PandasHDFDataset(self.hdf_store, k) for k in key}
 
     def get_function_kwargs(self, will_generate_keys, data,
                             manually_append=False):
@@ -217,7 +219,7 @@ class PandasHDFDataHandler(DataHandler):
 
     def bundle(self, key, path, new_key):
         """Copy the data to another HDF5 file with new key."""
-        data = self.get(key)()
+        data = self.get(key).value
         data.to_hdf(path, new_key)
 
 
