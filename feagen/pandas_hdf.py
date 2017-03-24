@@ -9,8 +9,12 @@ class PandasHDFDataset(object):
         if isinstance(storer.shape, tuple):
             self.shape = storer.shape
         else:
-            self.shape = (storer.nrows, storer.ncols)
-            assert (storer.nrows is not None) and (storer.ncols is not None)
+            if hasattr(storer.levels, '__len__'):
+                ncols = storer.ncols - len(storer.levels)
+            else:
+                ncols = storer.ncols
+            self.shape = (storer.nrows, ncols)
+            assert (self.shape[0] is not None) and (self.shape[1] is not None)
 
     @property
     def value(self):
@@ -22,6 +26,12 @@ class PandasHDFDataset(object):
 
     def select(self, *arg, **kwargs):
         return self._hdf_store.select(self.key, *arg, **kwargs)
+
+    def select_column(self, *arg, **kwargs):
+        return self._hdf_store.select_column(self.key, *arg, **kwargs)
+
+    def select_as_coordinates(self, *arg, **kwargs):
+        return self._hdf_store.select_as_coordinates(self.key, *arg, **kwargs)
 
     def __getitem__(self, key):
         if isinstance(key, int):

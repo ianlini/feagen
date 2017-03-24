@@ -210,7 +210,8 @@ class PandasHDFDataHandler(DataHandler):
             with SimpleTimer("Writing generated data {} to hdf5 file"
                              .format(key),
                              end_in_new_line=False):
-                if (isinstance(result.index, pd.MultiIndex)
+                if (isinstance(result, pd.DataFrame)
+                        and isinstance(result.index, pd.MultiIndex)
                         and isinstance(result.columns, pd.MultiIndex)):
                     self.hdf_store.put(key, result)
                 else:
