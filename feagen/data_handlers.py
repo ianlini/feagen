@@ -13,6 +13,8 @@ import scipy.sparse as ss
 import six
 from six.moves import cPickle
 
+from .pandas_hdf import PandasHDFDataset
+
 
 SPARSE_FORMAT_SET = set(['csr', 'csc'])
 
@@ -162,8 +164,34 @@ class PandasHDFDataHandler(DataHandler):
 
     def get(self, key):
         if isinstance(key, basestring):
-            return self.hdf_store[key]
-        return {k: self.hdf_store[k] for k in key}
+            return PandasHDFDataset(self.hdf_store, key)
+        return {k: PandasHDFDataset(self.hdf_store, k) for k in key}
+
+    def get_function_kwargs(self, will_generate_keys, data,
+                            manually_append=False):
+        kwargs = {}
+        if len(data) > 0:
+            kwargs['data'] = data
+        if manually_append is True:
+            kwargs['append_functions'] = {
+                k: partial(self.hdf_store.append, k)
+                for k in will_generate_keys
+            }
+        return kwargs
+
+    def check_result_dict_keys(self, result_dict, will_generate_keys,
+                               function_name, handler_key,
+                               manually_append=False):
+        will_generate_key_set = set(will_generate_keys)
+        result_dict_key_set = set(result_dict.keys())
+        if manually_append:
+            check_redundant_keys(result_dict_key_set, will_generate_key_set,
+                                 function_name, handler_key)
+            # TODO: check all the datasets is either manually created or in
+            #       result_dict_key_set
+        else:
+            check_exact_match_keys(result_dict_key_set, will_generate_key_set,
+                                   function_name, handler_key)
 
     def write_data(self, result_dict):
         for key, result in six.iteritems(result_dict):
@@ -182,12 +210,17 @@ class PandasHDFDataHandler(DataHandler):
             with SimpleTimer("Writing generated data {} to hdf5 file"
                              .format(key),
                              end_in_new_line=False):
-                self.hdf_store.put(key, result, format='table')
+                if (isinstance(result, pd.DataFrame)
+                        and isinstance(result.index, pd.MultiIndex)
+                        and isinstance(result.columns, pd.MultiIndex)):
+                    self.hdf_store.put(key, result)
+                else:
+                    self.hdf_store.put(key, result, format='table')
         self.hdf_store.flush(fsync=True)
 
     def bundle(self, key, path, new_key):
         """Copy the data to another HDF5 file with new key."""
-        data = self.get(key)
+        data = self.get(key).value
         data.to_hdf(path, new_key)
 
 

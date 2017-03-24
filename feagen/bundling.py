@@ -71,6 +71,8 @@ class DataBundlerMixin(object):
                     timer.update(batch_start)
                     batch_end = min(data_shape[0], batch_start + batch_size)
                     data_buffer = data[batch_start: batch_end]
+                    if isinstance(data_buffer, pd.DataFrame):
+                        data_buffer.values
                     if len(data_buffer.shape) == 1:
                         data_buffer = data_buffer[:, np.newaxis]
                     dset[batch_start: batch_end,
