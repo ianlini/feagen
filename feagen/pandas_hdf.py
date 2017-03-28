@@ -1,3 +1,15 @@
+def get_shape_from_pandas_hdf_storer(storer):
+    if not storer.is_table:
+        shape = storer.shape
+    else:
+        if storer.is_multi_index:  # TODO: test when only column is MultiIndex
+            ncols = storer.ncols - len(storer.levels)
+        else:
+            ncols = storer.ncols
+        shape = (storer.nrows, ncols)
+        assert (shape[0] is not None) and (shape[1] is not None)
+    return shape
+
 
 class PandasHDFDataset(object):
     """h5py Dataset-like wrapper for pandas HDFStore."""
@@ -5,16 +17,7 @@ class PandasHDFDataset(object):
     def __init__(self, hdf_store, key):
         self._hdf_store = hdf_store
         self.key = key
-        storer = self._hdf_store.get_storer(key)
-        if isinstance(storer.shape, tuple):
-            self.shape = storer.shape
-        else:
-            if hasattr(storer.levels, '__len__'):
-                ncols = storer.ncols - len(storer.levels)
-            else:
-                ncols = storer.ncols
-            self.shape = (storer.nrows, ncols)
-            assert (self.shape[0] is not None) and (self.shape[1] is not None)
+        self.shape = get_shape_from_pandas_hdf_storer(hdf_store.get_storer(key))
 
     @property
     def value(self):
