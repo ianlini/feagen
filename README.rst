@@ -11,7 +11,7 @@ A fast and memory-efficient Python feature generating framework for machine lear
 
 Introduction
 ------------
-TODO
+This package is currently not stable. This README is for version ``1.0.0a7``, but the current version in the master branch is very different from ``1.0.0a7``. If you want to use the latest version, please look at the tested examples. The new documentation is coming soon.
 
 Installation
 ------------
