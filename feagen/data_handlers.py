@@ -13,7 +13,7 @@ import scipy.sparse as ss
 import six
 from six.moves import cPickle
 
-from .pandas_hdf import PandasHDFDataset
+from .data_wrappers import PandasHDFDataset
 
 
 SPARSE_FORMAT_SET = set(['csr', 'csc'])
