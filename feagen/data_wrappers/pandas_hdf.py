@@ -1,20 +1,31 @@
+def get_shape_from_pandas_hdf_storer(storer):
+    # TODO: when the data has MultiIndex column and the format is 'fixed', the
+    #       shape will be None
+    if not storer.is_table:
+        shape = storer.shape
+        if shape is not None:
+            shape = tuple(shape)
+    else:
+        if storer.pandas_type == 'series_table':
+            shape = (storer.nrows,)
+        else:
+            if storer.is_multi_index:
+                ncols = storer.ncols - len(storer.levels)
+            else:
+                ncols = storer.ncols
+            shape = (storer.nrows, ncols)
+            assert (shape[0] is not None) and (shape[1] is not None)
+    return shape
+
 
 class PandasHDFDataset(object):
     """h5py Dataset-like wrapper for pandas HDFStore."""
 
     def __init__(self, hdf_store, key):
         self._hdf_store = hdf_store
+        self._storer = hdf_store.get_storer(key)
         self.key = key
-        storer = self._hdf_store.get_storer(key)
-        if isinstance(storer.shape, tuple):
-            self.shape = storer.shape
-        else:
-            if hasattr(storer.levels, '__len__'):
-                ncols = storer.ncols - len(storer.levels)
-            else:
-                ncols = storer.ncols
-            self.shape = (storer.nrows, ncols)
-            assert (self.shape[0] is not None) and (self.shape[1] is not None)
+        self.shape = get_shape_from_pandas_hdf_storer(self._storer)
 
     @property
     def value(self):
