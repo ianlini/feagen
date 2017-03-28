@@ -1,13 +1,20 @@
 def get_shape_from_pandas_hdf_storer(storer):
+    # TODO: when the data has MultiIndex column and the format is 'fixed', the
+    #       shape will be None
     if not storer.is_table:
         shape = storer.shape
+        if shape is not None:
+            shape = tuple(shape)
     else:
-        if storer.is_multi_index:
-            ncols = storer.ncols - len(storer.levels)
+        if storer.pandas_type == 'series_table':
+            shape = (storer.nrows,)
         else:
-            ncols = storer.ncols
-        shape = (storer.nrows, ncols)
-        assert (shape[0] is not None) and (shape[1] is not None)
+            if storer.is_multi_index:
+                ncols = storer.ncols - len(storer.levels)
+            else:
+                ncols = storer.ncols
+            shape = (storer.nrows, ncols)
+            assert (shape[0] is not None) and (shape[1] is not None)
     return shape
 
 
