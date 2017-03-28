@@ -2,7 +2,7 @@ def get_shape_from_pandas_hdf_storer(storer):
     if not storer.is_table:
         shape = storer.shape
     else:
-        if storer.is_multi_index:  # TODO: test when only column is MultiIndex
+        if storer.is_multi_index:
             ncols = storer.ncols - len(storer.levels)
         else:
             ncols = storer.ncols
