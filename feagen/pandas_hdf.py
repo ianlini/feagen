@@ -16,8 +16,9 @@ class PandasHDFDataset(object):
 
     def __init__(self, hdf_store, key):
         self._hdf_store = hdf_store
+        self._storer = hdf_store.get_storer(key)
         self.key = key
-        self.shape = get_shape_from_pandas_hdf_storer(hdf_store.get_storer(key))
+        self.shape = get_shape_from_pandas_hdf_storer(self._storer)
 
     @property
     def value(self):
