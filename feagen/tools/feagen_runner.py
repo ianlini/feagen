@@ -5,7 +5,6 @@ import collections
 
 import yaml
 from mkdir_p import mkdir_p
-from feagen.dag import draw_dag
 
 from .config import get_data_generator_from_config
 from ..bundling import get_data_keys_from_structure
