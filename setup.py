@@ -22,7 +22,7 @@ else:
         'bistiming>=0.1.1',
         'numpy',
         'scipy',
-        'networkx',
+        'networkx<2',
         'pyyaml',
         'tables',
         'pandas',
